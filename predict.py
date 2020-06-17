@@ -7,6 +7,7 @@ from datetime import date
 from utilities import *
 from robinhood import *
 from perceptron import *
+from LinearRegression import *
 
 import matplotlib.pyplot as plt
 
@@ -118,6 +119,7 @@ class Signal:
         
         print('Training Accuracy: %.2f' % round(sum(train_results['Target'] == train_results['Output'])/len(train_results) * 100,2))
         print('Testing Accuracy: %.2f' % round(sum(x['Target'] == x['Output'])/len(x) * 100,2))
+        print(train_results)
         print(x)
         
 if __name__ == '__main__':

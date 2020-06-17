@@ -21,6 +21,11 @@ class MLP:
             return 1
         return 0
     
+    def sigmoid(self,x):
+        res = 1/(1+np.exp(-x))
+        if res < 1:
+            return 
+    
     def train(self):
         prev_weights = self.weights
         new_weights = []
@@ -32,7 +37,6 @@ class MLP:
             for i in range(self.num_inputs):
                 y = self.predict(self.inputs[i])
                 e = self.targets[i] - y
-                #wx = self.dot(self.inputs[i],self.weights)
                 
                 if e == 0:
                     continue
