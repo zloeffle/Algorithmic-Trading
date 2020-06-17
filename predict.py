@@ -18,12 +18,12 @@ Common trading strategies & ML algorithms that generate buy signals and predict 
 class Signal:
     def __init__(self,data):
         self.portfolio = data
-        self.results = None           
+        self.results = {}           
     
     '''
     Generate features using indicators from utilities.py
     '''
-    def create_features(self,end_date='2020-05-29',future_date='2020-06-05'):
+    def create_features(self,data,end_date='2020-05-29',future_date='2020-06-05'):
         df = self.portfolio
         
         for t in list(df.index):
@@ -53,12 +53,19 @@ class Signal:
         df.dropna(inplace=True,axis=0)
         return df
 
+
+    '''
+    Implementation of the MLP model
+    
+    Params: Dataframe of stocks and technical indicators
+    Returns: tuple(Input dataframe with columns for actual and predicted values, MLP model object)
+    '''
     def mlp_network(self,df):
         df.set_index('Ticker',inplace=True)
         columns = list(df.columns)
         
         # set target classifications
-        target = df[str(columns[-1])]#['7-Day Profit']
+        target = df[str(columns[-1])]
         df.drop(str(columns[-1]),axis=1,inplace=True)
         
         # set input data and add col for bias
@@ -78,17 +85,40 @@ class Signal:
         df.drop('Bias',axis=1,inplace=True)
         return df,model
     
+    '''
+    Generates accuracy metrics for the MLP model
+    
+    Params: train = dataframe to train the model, test = dataframe to test and validate the model
+    Returns: 
+    '''
     def mlp_evaluation(self,train,test):     
         cols = list(test.columns)
         
+        # training data results
+        train_results,model = self.mlp_network(train)
+        
+        # set our target data
         y = test[str(cols[-1])]
+        y = y.to_numpy()
         test.drop(str(cols[-1]),axis=1,inplace=True)
+        
+        # prepare the independent variables
         x = test
         x.set_index('Ticker',inplace=True)
         x = x.to_numpy()
         
-        train_results,model = self.mlp_network(train)
+        # predict from testing data 
+        out = [model.predict(p) for p in x]
         
+        # Build resultant dataframe
+        x = pd.DataFrame(x,index=test.index,columns=cols[1:5])
+        x['Target'] = y
+        x['Target'] = x['Target'].astype(int)
+        x['Output'] = out
+        
+        print('Training Accuracy: %.2f' % round(sum(train_results['Target'] == train_results['Output'])/len(train_results) * 100,2))
+        print('Testing Accuracy: %.2f' % round(sum(x['Target'] == x['Output'])/len(x) * 100,2))
+        print(x)
         
 if __name__ == '__main__':
     df1 = pd.read_csv('train_04-30-2020.csv')

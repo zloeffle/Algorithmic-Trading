@@ -2,6 +2,9 @@ import pandas as pd
 import numpy as np
 import random
 
+'''
+Implementation of a multilayer perceptron network
+'''
 class MLP:
     def __init__(self,data,inputs,targets):
         self.data = data
@@ -19,7 +22,13 @@ class MLP:
         return 0
     
     def train(self):
-        for j in range(10):
+        prev_weights = self.weights
+        new_weights = []
+        
+        # loop until weights do not change
+        while prev_weights != new_weights:
+            
+            prev_weights = new_weights
             for i in range(self.num_inputs):
                 y = self.predict(self.inputs[i])
                 e = self.targets[i] - y
@@ -31,6 +40,8 @@ class MLP:
                     self.weights = self.add(self.weights,self.inputs[i])
                 else:
                     self.weights = self.sub(self.weights,self.inputs[i])
+                    
+                new_weights = self.weights
         return self.weights
     
     def predict(self,inputs):
