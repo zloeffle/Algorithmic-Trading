@@ -5,13 +5,13 @@ import math
 from datetime import date
 
 from utilities import *
-from robinhood import *
+#from robinhood import *
 from perceptron import *
-from LinearRegression import *
+#from LinearRegression import *
 
 import matplotlib.pyplot as plt
 
-client = Robinhood()
+#client = Robinhood()
         
 '''
 Common trading strategies & ML algorithms that generate buy signals and predict a stocks return 14days ahead
@@ -53,7 +53,6 @@ class Signal:
 
         df.dropna(inplace=True,axis=0)
         return df
-
 
     '''
     Implementation of the MLP model
@@ -109,6 +108,7 @@ class Signal:
         x = x.to_numpy()
         
         # predict from testing data 
+        print('\nTesting Data')
         out = [model.predict(p) for p in x]
         
         # Build resultant dataframe

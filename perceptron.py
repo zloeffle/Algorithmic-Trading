@@ -8,23 +8,19 @@ Implementation of a multilayer perceptron network
 class MLP:
     def __init__(self,data,inputs,targets):
         self.data = data
-        self.inputs = inputs.to_numpy()
-        self.targets = targets.to_numpy()
+        self.inputs = inputs.to_numpy() # inputs for the mlp model
+        self.targets = targets.to_numpy() # target values
         
-        self.input_size = len(self.inputs[0])
-        self.num_inputs = len(inputs)
+        self.input_size = len(self.inputs[0]) # size of each input
+        self.num_inputs = len(inputs) # total number of inputs
         
-        self.weights = [random.random() for _ in range(self.input_size + 1)]
+        self.weights = [random.random() for _ in range(self.input_size + 1)] # initialize weights randomly
     
     def activation(self,n):
         if n > 0:
             return 1
         return 0
-    
-    def sigmoid(self,x):
-        res = 1/(1+np.exp(-x))
-        if res < 1:
-            return 
+        
     
     def train(self):
         prev_weights = self.weights
@@ -51,6 +47,7 @@ class MLP:
     def predict(self,inputs):
         z = self.dot(self.weights,inputs)
         a = self.activation(z)
+        print('W*X: %f  Activation: %d' % (z,a))
         return a
     
     """
