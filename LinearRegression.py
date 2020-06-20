@@ -12,43 +12,16 @@ Root Mean Squared Error is even more popular than MSE, because RMSE is interpret
 '''
 
 class LinearRegression:
-    def __init__(self,data):
-        self.columns = []
+    def __init__(self):
         self.coef = [] # beta values
-        
-    def explore_data(self,data):
-        print(data.info())
-        print(data.describe())
-        print(list(data.columns))
-
-    '''
-    params: data = pandas dataframe, features = features to drop from dataset, target = target feature in dataset
-    returns: tuple(x,y) where x = dataframe of independent vars and y = dataframe of dependent vars
-    '''
-    def prepare_data(self,data,features,target):
-        # remove irrelevant features
-        data.drop(features,axis=1,inplace=True)
-        
-        # get target column
-        y = data[target]
-        
-        # get predictor vars
-        data.drop(target,axis=1,inplace=True)
-        x = data
-
-        # set global column list
-        self.columns = list(x.columns)
-        
-        return x,y
     
     '''
     Splits data into training and testing components
     params: x = dataframe of predictor vars, y = dataframe of target vars, size = test size
     '''
-    def train_test_split(self,x,y,size):
-        split_point = int(len(x) * size)      
-        x_train,y_train = x.iloc[:split_point].to_numpy(),y.iloc[:split_point].to_numpy()
-        x_test,y_test = x.iloc[split_point:].to_numpy(),y.iloc[split_point:].to_numpy()
+    def train_test_split(self,x,y,split):      
+        x_train,y_train = x.loc[:split,],y.loc[:split,]
+        x_test,y_test = x.loc[split:,],y.loc[split:,]
         return x_train,y_train,x_test,y_test
 
     def reshape_x(self,x):
@@ -85,8 +58,4 @@ class LinearRegression:
             for xi,bi in zip(row,betas):
                 pred += xi*bi
             predictions.append(round(pred,2))
-        
-        x_test = pd.DataFrame(x_test,columns=self.columns)
-        x_test['Actual'] = y_test
-        x_test['Predicted'] = predictions
-        return x_test
+        return predictions

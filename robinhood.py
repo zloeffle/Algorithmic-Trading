@@ -5,7 +5,7 @@ import robin_stocks as rs
 import yfinance as yf
 import pandas as pd
 import numpy as np
-import db
+#import db
 
 from bs4 import BeautifulSoup
 
@@ -15,7 +15,7 @@ class Robinhood:
     password = None
     auth_token = None
     refresh_token = None
-    database = db.Database('stocks')
+    #database = db.Database('stocks')
     
     def __init__(self):
         self.device_token = self.GenerateDeviceToken() # generate device token upon initialization

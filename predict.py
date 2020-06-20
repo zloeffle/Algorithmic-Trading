@@ -2,16 +2,19 @@ import os
 import pandas as pd
 import numpy as np
 import math
+import random
 from datetime import date
 
 from utilities import *
-#from robinhood import *
+from robinhood import *
 from perceptron import *
-#from LinearRegression import *
+from LinearRegression import *
+from KNN import *
+from DecisionTree import * 
 
 import matplotlib.pyplot as plt
 
-#client = Robinhood()
+client = Robinhood()
         
 '''
 Common trading strategies & ML algorithms that generate buy signals and predict a stocks return 14days ahead
@@ -55,77 +58,78 @@ class Signal:
         return df
 
     '''
-    Implementation of the MLP model
+    Implementation of Multiple Linear Regression
     
-    Params: Dataframe of stocks and technical indicators
-    Returns: tuple(Input dataframe with columns for actual and predicted values, MLP model object)
+    Features: Open, High, Low, Volume, Adj Close
+    Predictors: Open, High, Low, Volume
+    Target: Adj Close
     '''
-    def mlp_network(self,df):
-        df.set_index('Ticker',inplace=True)
-        columns = list(df.columns)
+    def linear_regression(self,data):
+        model = LinearRegression()
+        features = list(data.columns)
         
-        # set target classifications
-        target = df[str(columns[-1])]
-        df.drop(str(columns[-1]),axis=1,inplace=True)
+        x = data[['Open','High','Low','Volume']]
+        y = data['Adj Close']
         
-        # set input data and add col for bias
-        inputs = df
-        inputs['Bias'] = 1
+        split = '2020-05-29'
+        x_train,y_train,x_test,y_test = model.train_test_split(x,y,split)
+        x_test = x_test.iloc[1:]
+        y_test = y_test.iloc[1:]
         
-        # initialize mlp model and train
-        model = MLP(df,inputs,target)
-        model.train()
+        model.fit(x_train.to_numpy(),y_train.to_numpy())
+        preds = model.predict(x_test.to_numpy(),y_test.to_numpy())
         
-        # generate outputs
-        out = [model.predict(p) for p in model.inputs]
-        df['Target'] = target
-        df['Target'] = df['Target'].astype(int)
-        df['Output'] = out
+        x_test['Actual Price'] = y_test
+        x_test['Predicted Price'] = preds
+        return x_test
         
-        df.drop('Bias',axis=1,inplace=True)
-        return df,model
-    
-    '''
-    Generates accuracy metrics for the MLP model
-    
-    Params: train = dataframe to train the model, test = dataframe to test and validate the model
-    Returns: 
-    '''
-    def mlp_evaluation(self,train,test):     
-        cols = list(test.columns)
+    def knn_classifier(self,data):
+        model = KNN(10)
+        data.set_index('Ticker',inplace=True)
         
-        # training data results
-        train_results,model = self.mlp_network(train)
+        train = data.iloc[:-5]
+        test = data.iloc[-5:]
+        validation = test['7-Day Profit']
+        test.drop('7-Day Profit',axis=1,inplace=True)
+        test = test.to_numpy()
         
-        # set our target data
-        y = test[str(cols[-1])]
-        y = y.to_numpy()
-        test.drop(str(cols[-1]),axis=1,inplace=True)
+        classifications = []
+        for row in test:
+            neighbors = model.get_neightbors(train,row)
+            classifications.append(model.classify(neighbors))
         
-        # prepare the independent variables
-        x = test
-        x.set_index('Ticker',inplace=True)
-        x = x.to_numpy()
+        result = pd.DataFrame(test,index=data.iloc[-5:].index,columns=['Simple MA','MA','MACD','RSi'])
+        result['Actual Signal'] = data['7-Day Profit'].iloc[-5:]
+        result['Predicted Signal'] = classifications
+        return result
         
-        # predict from testing data 
-        print('\nTesting Data')
-        out = [model.predict(p) for p in x]
+    def decision_tree(self,data):
+        model = DecisionTree()
+        data.set_index('Ticker',inplace=True)
+        data['7-Day Profit'] = data['7-Day Profit'].astype(int)
         
-        # Build resultant dataframe
-        x = pd.DataFrame(x,index=test.index,columns=cols[1:5])
-        x['Target'] = y
-        x['Target'] = x['Target'].astype(int)
-        x['Output'] = out
-        
-        print('Training Accuracy: %.2f' % round(sum(train_results['Target'] == train_results['Output'])/len(train_results) * 100,2))
-        print('Testing Accuracy: %.2f' % round(sum(x['Target'] == x['Output'])/len(x) * 100,2))
-        print(train_results)
-        print(x)
+        tree = model.build_tree(data,1)
+        model.print(tree,10)
+
+    def multilayer_perceptron(self,data):
+        pass
         
 if __name__ == '__main__':
     df1 = pd.read_csv('train_04-30-2020.csv')
     df2 = pd.read_csv('train_05-29-2020.csv')
     df3 = pd.read_csv('train_06-01-2020.csv')
     s = Signal(df1)
-    s.mlp_evaluation(df1,df2)
+    
+    # Linear Regression
+    stocks = ['UAL','BAC','AMD']
+    df = client.get_historicals(stocks[0])
+    res = s.linear_regression(df)
+    
+    # Decision Tree
+    s.decision_tree(df1)
+    
+    # KNN
+    
+    
+    # MLP
         

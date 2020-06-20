@@ -44,28 +44,6 @@ class KNN:
 
         most_freq = max(labels,key=labels.get)
         return most_freq
-
-if __name__ == '__main__':
-    df1 = pd.read_csv('train_04-30-2020.csv')
-    df2 = pd.read_csv('train_05-29-2020.csv')
-    df3 = pd.read_csv('train_06-01-2020.csv')
-
-    knn = KNN(5)
-    df1.set_index('Ticker',inplace=True)
-    df2.set_index('Ticker',inplace=True)
-    cols = ['Simple MA','MA','MACD','RSI']
-
-    train = df1
-    test = df2[cols]
-
-    labels = []
-    for t in list(test.index):
-        neighbors = knn.get_neightbors(train,test.loc[t,:])
-        label = knn.classify(neighbors)
-        labels.append(label)
-
-    df2['Prediction'] = labels
-    print(df2)
     
 
         
