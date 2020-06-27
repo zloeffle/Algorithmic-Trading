@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
+#import seaborn as sns
 import random
 
 '''
@@ -23,15 +23,10 @@ class LinearRegression:
         x_train,y_train = x.loc[:split,],y.loc[:split,]
         x_test,y_test = x.loc[split:,],y.loc[split:,]
         return x_train,y_train,x_test,y_test
-
-    def reshape_x(self,x):
-        x = x.reshape(-1,1)
-        return x
     
     def ones(self,x):
         ones = np.ones(shape=x.shape[0]).reshape(-1,1)
-        ones = np.concatenate((ones,x),1)
-        return ones
+        return np.concatenate((ones,x),1)
 
     '''
     Generates coefficients using the equation: b = (x_T dot x)^-1 dot x_T dot y
@@ -39,9 +34,12 @@ class LinearRegression:
     returns: Nothing, sets adds coefficients to global array
     '''
     def fit(self,x,y):
-        if (len(x.shape)) == 1:
-            x = self.reshape_x(x)
-        self.coef = np.linalg.inv(x.transpose().dot(x)).dot(x.transpose()).dot(y)
+        # add col of ones to x matrix
+        x = self.ones(x)
+
+        # generate coeficients 
+        coef = np.linalg.inv(x.transpose().dot(x)).dot(x.transpose()).dot(y)
+        self.coef = coef
     
     '''
     Validate regression model and make new predictions
@@ -49,13 +47,14 @@ class LinearRegression:
     returns: dataframe with same features as x_test as well as columns for predicted and actual values
     '''
     def predict(self,x_test,y_test):
-        predictions = []
+        preds = [] # predictions
         b0 = self.coef[0]
         betas = self.coef[1:]
-        
+        x_test = self.ones(x_test)
+
         for row in x_test:
             pred = b0
             for xi,bi in zip(row,betas):
                 pred += xi*bi
-            predictions.append(round(pred,2))
-        return predictions
+            preds.append(pred)
+        return preds

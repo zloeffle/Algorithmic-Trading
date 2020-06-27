@@ -12,15 +12,13 @@ Moving Average uses prior 19 days and current day - indicator is for next day
 params: data = dataframe of historical data, current_day = day to get price for, window = days to compute MA
 returns: 1 = buy, -1 = sell, 0 = hold
 '''
-def simple_moving_average(data,current_day,window=20):
-    data = data.loc[:current_day,'Adj Close']
-    price = data.iloc[-1]
-    ma = round(data.iloc[-window:-1].mean(),2)
+def simple_moving_average(data,window=20):
+    price = data['Adj Close'].iloc[-1]
+    ma = data['Adj Close'].iloc[-window:-1].mean()
+    ma = round(ma,2)
     
     if price > ma:
         return 1
-    elif price < ma:
-        return -1
     else:
         return 0
 
@@ -35,15 +33,13 @@ Slow MA crosses above fast MA - sell
 params: data = dataframe of historical data, current_day = day to get price for, fast_window = days to compute fast MA, slow_window = days to compute slow MA
 returns: 1 = buy, -1 = sell, 0 = hold
 '''
-def moving_average(data,current_day,fast_window=20,slow_window=100):
-    data = data.loc[:current_day,'Adj Close']
+def moving_average(data,fast_window=20,slow_window=100):
+    data = data['Adj Close']
     slow_ma = round(data.iloc[-slow_window:].mean(),2)
     fast_ma = round(data.iloc[-fast_window:].mean(),2)
     
     if fast_ma > slow_ma:
         return 1
-    elif slow_ma < fast_ma:
-        return -1
     else:
         return 0
 
@@ -63,8 +59,8 @@ Logic
 
 Returns: BUY signal if MACD line crosses above signal line and SELL signal if crosses below
 '''
-def macd(data,current_day,slow_ema=26,fast_ema=12):
-    data = data.loc[:current_day,'Adj Close']
+def moving_average_cd(data,slow_ema=26,fast_ema=12):
+    data = data['Adj Close']
     
     slow = data.ewm(span=slow_ema,adjust=False).mean()
     fast = data.ewm(span=fast_ema,adjust=False).mean()
@@ -80,8 +76,6 @@ def macd(data,current_day,slow_ema=26,fast_ema=12):
     
     if data['MACD'].iloc[-1] > data['Signal'].iloc[-1]:
         return 1
-    elif data['MACD'].iloc[-1] < data['Signal'].iloc[-1]:
-        return -1
     else:
         return 0
     
@@ -93,8 +87,8 @@ Relative Strength Index (RSI): Momentum oscillator that measures velocity and ma
 
 returns: original dataframe with RSI column
 '''
-def relative_strength_index(data,current_day,lower_thresh=30,upper_thresh=70,period=14):
-    data = data.loc[:current_day,'Adj Close']
+def relative_strength_index(data,lower_thresh=30,upper_thresh=70,period=14):
+    data = data['Adj Close']
     data = data.iloc[-period:]
     difference = data.diff()
     
@@ -117,3 +111,46 @@ def relative_strength_index(data,current_day,lower_thresh=30,upper_thresh=70,per
         return -1
     else:
         return 0
+
+'''
+Money Flow Index (MFI): technical oscillator that uses price and volume data for identifying overbought/oversold signals
+- MFI > 80 = overbought and MFI < 20 = oversold
+
+Formulas
+- Money Flow Index (MFI) = 100 - (100/(1 + MFR))
+- Money Flow Ratio (MFR) = Sum of 14 day positive flow / Sum of 14 day negative flow
+- Typical Price (TP) = (high + low + close) / 3
+- Raw Money Flow (RMF) = TP * Volume
+'''
+def money_flow_index(data):
+    mfi = 0
+    df = data.tail(15)
+    
+    # calculate typical price of last 14 days
+    df['Typical Price'] = (df['High'] + df['Low'] + df['Close'])/3
+    df = df.round(2)
+    df['Temp'] = df['Typical Price'].shift(1)
+    df.dropna(inplace=True)
+    df['RMF Sign'] = df['Typical Price'] >= df['Temp']
+    df.drop('Temp',axis=1,inplace=True)
+
+    # calculate RMF
+    df['RMF'] = df['Typical Price'] * df['Volume']
+    for row in list(df.index):
+        if not df.loc[row,'RMF Sign']:
+            df.loc[row,'RMF'] *= -1
+
+    # calculate MFR
+    pos,neg = 0,0
+    mfr = 0
+    for val in df['RMF'].values:
+        if val >= 0:
+            pos += val
+        else:
+            neg += val*-1
+    #print(pos,neg)
+    mfr = pos/neg
+
+    # money flow index
+    mfi = 100 - (100/(1 + mfr))
+    return round(mfi,2)
