@@ -127,7 +127,6 @@ class Robinhood:
         names = self.get_names(tickers)
         prices = self.get_prices(tickers)
         df = pd.DataFrame({'Ticker': tickers, 'Name': names, 'Price':prices, 'Collection':url[34:]})
-        #df.to_sql('collections',con=self.database.connection,if_exists='append',index=False)
         return df
         
 if __name__ == '__main__':

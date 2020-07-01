@@ -4,79 +4,21 @@ import matplotlib.pyplot as plt
 
 def simple_moving_average(data,days):
     res = data['Adj Close'].rolling(window=days).mean()
-    return res
+    return round(res.iloc[-1])
 
 def exponential_moving_average(data,days):
     res = data['Adj Close'].ewm(span=days,adjust=False).mean()
-    return res
+    return round(res.iloc[-1])
 
-'''
-Price crosses above 20-day SMA - buy
-Price crosses below 20-day SMA - sell
-Moving Average uses prior 19 days and current day - indicator is for next day
-params: data = dataframe of historical data, current_day = day to get price for, window = days to compute MA
-returns: 1 = buy else 0
-'''
-def sma_cross(data,window=20):
-    curr_price = data['Adj Close'].iloc[-1]
-    average = data['Adj Close'].iloc[-window:].mean()
+def weekly_return(data):
+    data = data.loc[:,'Adj Close']
+    ret = 0
     
-    if curr_price > average:
-        return 1
-    else:
-        return 0
-
-'''
-Uses two averages of different window sizes
-100 day MA (Slow)- takes longer to adjust to sudden price changes
-20 day MA (Fast)- faster to account for sudden changes
-Fast MA crosses above slow MA - buy
-Slow MA crosses above fast MA - sell
-params: data = dataframe of historical data, current_day = day to get price for, fast_window = days to compute fast MA, slow_window = days to compute slow MA
-returns: 1 = buy, else 0
-'''
-def moving_average_cross(data,fast_window=20,slow_window=100):
-    slow_ma = round(data['Adj Close'].iloc[-slow_window:].mean(),2)
-    fast_ma = round(data['Adj Close'].iloc[-fast_window:].mean(),2)
-    
-    if fast_ma > slow_ma:
-        return 1
-    else:
-        return 0
-
-
-'''
-Moving Average Convergence/Divergence (MACD)
-- indicator/oscillator for technical analysis
-Composition
-- MACD Series: difference between the fast and slow exponential moving averages (EMA)
-- Signal: EMA on the MACD series
-- Divergence: difference between MACD series and signal series
-Logic
-- MACD crosses above signal line -> buy
-- MACD crosses below signal line -> sell
-Returns: BUY signal if MACD line crosses above signal line and SELL signal if crosses below
-'''
-def moving_average_cd(data,slow_ema=26,fast_ema=12):
-    data = data['Adj Close']
-    
-    slow = data.ewm(span=slow_ema,adjust=False).mean()
-    fast = data.ewm(span=fast_ema,adjust=False).mean()
-
-    macd = fast-slow
-    signal = macd.ewm(span=9,adjust=False).mean()
-    macd = macd.reset_index()
-    signal = signal.reset_index()
-    
-    data = data.reset_index()
-    data['MACD'] = macd['Adj Close']
-    data['Signal'] = signal['Adj Close']
-    
-    if data['MACD'].iloc[-1] > data['Signal'].iloc[-1]:
-        return 1
-    else:
-        return 0
-    
+    prev = data[0]
+    for val in data[1:]:
+        ret += val - prev
+        prev = val
+    return round(ret,2)
 
 '''
 Relative Strength Index (RSI): Momentum oscillator that measures velocity and magnitude of directional price movements
@@ -102,12 +44,8 @@ def relative_strength_index(data,lower_thresh=30,upper_thresh=70,period=14):
     data = data.reset_index()
     data['RSI'] = rsi['Adj Close']
     
-    if data['RSI'].iloc[-1] > lower_thresh:
-        return 1
-    elif data['RSI'].iloc[-1] > upper_thresh:
-        return -1
-    else:
-        return 0
+    rsi = data['RSI'].iloc[-1]
+    return round(rsi,2)
 
 '''
 Money Flow Index (MFI): technical oscillator that uses price and volume data for identifying overbought/oversold signals
