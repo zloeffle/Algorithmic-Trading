@@ -57,8 +57,8 @@ class DecisionTree:
             if n == 0:
                 continue
 
-            t = sum(group['7-Day Profit'] == 1)/n
-            f = sum(group['7-Day Profit'] == 0)/n
+            t = sum(group['Buy Signal'] == 1)/n
+            f = sum(group['Buy Signal'] == 0)/n
             gini += (1-(math.pow(t,2) + math.pow(f,2))) * (n/instances)
 
         gini = round(gini,4)
@@ -75,7 +75,7 @@ class DecisionTree:
             for row in tickers:
                 groups = self.partition(data,column,data.loc[row,column])
                 gini = self.gini_index(groups)
-                
+
                 if gini < best_gini:
                     best_feature = column
                     best_threshold = data.loc[row,column]
@@ -87,12 +87,11 @@ class DecisionTree:
         node.thresh = best_threshold
         node.gini = best_gini
         node.left,node.right = best_groups
-        node.print()
         return node
     
     # make a node terminal
     def terminal(self,group):
-        vals = group['7-Day Profit']
+        vals = group['Buy Signal']
         t = sum(vals == 1)
         f = sum(vals == 0)
         if t >= f:
@@ -103,39 +102,49 @@ class DecisionTree:
     # generate left and right children for a node or make it terminal
     def split(self,node,depth,min_size):
         left,right = node.left,node.right
-
+        
         # check for no split
         if left is None or right is None:
-            node.left,node.right = self.terminal(left+right)
-            return node
+            node.left = node.right = self.terminal(left+right)
+            return
 
         # check for max depth
         if depth >= self.max_depth:
             node.left = self.terminal(left)
             node.right = self.terminal(right)
-            return node
+            return
 
         # process left child
         if len(left) <= min_size:
             node.left = self.terminal(left)
         else:
             node.left = self.best_split(left)
-            self.split(node.left, depth+1,min_size)
+            self.split(node.left,depth+1,min_size)
 
         # process right child
         if len(right) <= min_size:
             node.right = self.terminal(right)
         else:
             node.right = self.best_split(right)
-            self.split(node.right, depth+1,min_size)
+            self.split(node.right,depth+1,min_size)
+
 
     # build the decision tree
     def build_tree(self,data,min_size):
         root = self.best_split(data)
-        self.split(root,10,1)
+        s = self.split(root,0,min_size)
         return root
     
     # predict based on a row of data
-    def predict(self):
-        pass
+    def predict(self,node,data):
+        if data[node.feat] < node.thresh:
+            if isinstance(node.left,Node):
+                return self.predict(node.left,data)
+            else:
+                return node.left
+        else:
+            if isinstance(node.right,Node):
+                return self.predict(node.right,data)
+            else:
+                return node.right
     

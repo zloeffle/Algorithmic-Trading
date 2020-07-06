@@ -4,14 +4,14 @@ import matplotlib.pyplot as plt
 
 def simple_moving_average(data,days):
     res = data['Adj Close'].rolling(window=days).mean()
-    return round(res.iloc[-1])
+    return res #round(res.iloc[-1])
 
 def exponential_moving_average(data,days):
     res = data['Adj Close'].ewm(span=days,adjust=False).mean()
-    return round(res.iloc[-1])
+    return res #round(res.iloc[-1])
 
-def weekly_return(data):
-    data = data.loc[:,'Adj Close']
+def weekly_return(data,start_date,end_date):
+    data = data.loc[start_date:end_date,'Adj Close']
     ret = 0
     
     prev = data[0]
