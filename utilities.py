@@ -4,11 +4,11 @@ import matplotlib.pyplot as plt
 
 def simple_moving_average(data,days):
     res = data['Adj Close'].rolling(window=days).mean()
-    return res #round(res.iloc[-1])
+    return round(res.iloc[-1])
 
 def exponential_moving_average(data,days):
     res = data['Adj Close'].ewm(span=days,adjust=False).mean()
-    return res #round(res.iloc[-1])
+    return round(res.iloc[-1])
 
 def weekly_return(data,start_date,end_date):
     data = data.loc[start_date:end_date,'Adj Close']
@@ -19,6 +19,14 @@ def weekly_return(data,start_date,end_date):
         ret += val - prev
         prev = val
     return round(ret,2)
+
+def moving_avg_cross(data,days_short,days_long):
+    short_avg = simple_moving_average(data,days_short)
+    long_avg = simple_moving_average(data,days_long)
+    
+    if short_avg > long_avg:
+        return 1
+    return 0
 
 '''
 Relative Strength Index (RSI): Momentum oscillator that measures velocity and magnitude of directional price movements
@@ -45,11 +53,13 @@ def relative_strength_index(data,lower_thresh=30,upper_thresh=70,period=14):
     data['RSI'] = rsi['Adj Close']
     
     rsi = data['RSI'].iloc[-1]
-    return round(rsi,2)
+    if rsi > lower_thresh:
+        return 1
+    return 0
 
 '''
 Money Flow Index (MFI): technical oscillator that uses price and volume data for identifying overbought/oversold signals
-- MFI > 80 = overbought and MFI < 20 = oversold
+- MFI > 70 = overbought and MFI < 30 = oversold
 Formulas
 - Money Flow Index (MFI) = 100 - (100/(1 + MFR))
 - Money Flow Ratio (MFR) = Sum of 14 day positive flow / Sum of 14 day negative flow
@@ -87,4 +97,7 @@ def money_flow_index(data):
 
     # money flow index
     mfi = 100 - (100/(1 + mfr))
-    return round(mfi,2)
+    
+    if mfi >= 30 and mfi <= 70:
+        return 1
+    return 0
