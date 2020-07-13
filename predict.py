@@ -8,13 +8,10 @@ import json
 from datetime import date
 
 from utilities import *
-#from robinhood import *
 from perceptron import *
 from DecisionTree import * 
 
 import matplotlib.pyplot as plt
-
-#client = Robinhood()
         
 '''
 Common trading strategies & ML algorithms that generate buy signals and predict a stocks return 14days ahead
