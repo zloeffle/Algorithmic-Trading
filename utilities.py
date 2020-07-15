@@ -24,10 +24,25 @@ def moving_avg_cross(data,days_short,days_long):
     short_avg = simple_moving_average(data,days_short)
     long_avg = simple_moving_average(data,days_long)
     
-    if short_avg > long_avg:
-        return 1
-    return 0
+    return short_avg > long_avg
+    
+'''
+Buy if 30 day MA crosses below 90 day MA
+'''
+def mean_reversion(data):
+    thirty_day_ma = simple_moving_average(data,30)
+    ninety_day_ma = simple_moving_average(data,90)
+    return thirty_day_ma < ninety_day_ma
 
+'''
+Buy if stock is at a 20 day high
+'''
+def turtle(data):
+    curr_price = data['Adj Close'].iloc[-1]
+    prev_prices = list(data['Adj Close'].iloc[-21:-1])
+    highest = max(prev_prices)
+    return curr_price > highest
+    
 '''
 Relative Strength Index (RSI): Momentum oscillator that measures velocity and magnitude of directional price movements
 - RSI crosses lower threshold -> buy
@@ -53,9 +68,8 @@ def relative_strength_index(data,lower_thresh=30,upper_thresh=70,period=14):
     data['RSI'] = rsi['Adj Close']
     
     rsi = data['RSI'].iloc[-1]
-    if rsi > lower_thresh:
-        return 1
-    return 0
+    return rsi > lower_thresh and rsi < upper_thresh
+    
 
 '''
 Money Flow Index (MFI): technical oscillator that uses price and volume data for identifying overbought/oversold signals
@@ -98,6 +112,5 @@ def money_flow_index(data):
     # money flow index
     mfi = 100 - (100/(1 + mfr))
     
-    if mfi >= 30 and mfi <= 70:
-        return 1
-    return 0
+    return mfi >= 30 and mfi <= 70
+       

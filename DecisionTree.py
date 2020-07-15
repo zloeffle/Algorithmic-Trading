@@ -34,20 +34,32 @@ class DecisionTree:
         else:
             print('%s[%s]' % (depth*' ',node))
 
+    '''
+    Partitions data into left and right groups based on an attribute and a value for that attribute
+    Params: data = input dataframe, feature = feature to get values from, value = value to split data on    
+    Returns: tuple(left split dataframe, right split dataframe)
+    '''
     def partition(self,data,feature,value):
-        true_df,false_df = {},{}
+        left,right = {},{}
         rows = list(data.index)
         
         for row in rows:
-            if data.loc[row,feature] <= value:
-                true_df[row] = list(data.loc[row,:].values)
+            if data.loc[row,feature] == True:
+                left[row] = list(data.loc[row,:].values)
             else:
-                false_df[row] = list(data.loc[row,:].values)
+                right[row] = list(data.loc[row,:].values)
                 
-        true_df = pd.DataFrame.from_dict(true_df,orient='index',columns=data.columns)
-        false_df = pd.DataFrame.from_dict(false_df,orient='index',columns=data.columns)
-        return true_df,false_df
-        
+        left = pd.DataFrame.from_dict(left,orient='index',columns=data.columns)
+        right = pd.DataFrame.from_dict(right,orient='index',columns=data.columns)
+        return left,right
+         
+    '''
+    Score used to better understand how mixed the classes are in groups created by a split
+    Perfect split gives gini score of 0 while worst case gives split of 0.5 (for 2 class problems)
+    
+    Params: tuple of groups created by a split
+    Returns: float(gini score for the groups)
+    '''
     def gini_index(self,groups):
         gini = 0.0
         instances = float(sum([len(group) for group in groups]))
@@ -57,31 +69,46 @@ class DecisionTree:
             if n == 0:
                 continue
 
-            t = sum(group['Buy Signal'] == 1)/n
-            f = sum(group['Buy Signal'] == 0)/n
+            t = sum(group['Profit'] == True)/n
+            f = sum(group['Profit'] == False)/n
             gini += (1-(math.pow(t,2) + math.pow(f,2))) * (n/instances)
 
         gini = round(gini,4)
         #print(gini)
         return gini
         
-    # returns node that results in the optimal split
+    '''
+    Evaluates all possible splits to find the one with the best gini score
+    
+    Params: dataframe
+    Returns: Node() to best split data
+    '''
     def best_split(self,data):
+        # initialize result values
         best_feature,best_threshold,best_gini,best_groups = None,math.inf,math.inf,None
-        cols = list(data.columns)
-        tickers = list(data.index)
 
+        # features and rows in dataset
+        cols = list(data.columns)
+        rows = list(data.index)
+
+        # iterate through features
         for column in cols[:-1]:
-            for row in tickers:
+            # iterate through each row
+            for row in rows:
+                # parition data into groups based on each feature and value under that feature
                 groups = self.partition(data,column,data.loc[row,column])
+                
+                # calculate gini score for paritioned data
                 gini = self.gini_index(groups)
 
+                # update result values if current score is better than previous score
                 if gini < best_gini:
                     best_feature = column
                     best_threshold = data.loc[row,column]
                     best_gini = gini
                     best_groups = groups
 
+        # return node to best split data
         node = Node()
         node.feat = best_feature
         node.thresh = best_threshold
@@ -89,62 +116,87 @@ class DecisionTree:
         node.left,node.right = best_groups
         return node
     
-    # make a node terminal
+    '''
+    Returns most frequent class to assign to a terminal node
+    
+    Params: group = dataframe
+    Returns: int() most frequent class
+    '''
     def terminal(self,group):
-        vals = group['Buy Signal']
-        t = sum(vals == 1)
-        f = sum(vals == 0)
+        res = {}
+        t = sum(group['Profit'] == True)
+        f = sum(group['Profit'] == False)
+    
         if t >= f:
             return True
-        else:
-            return False
-
-    # generate left and right children for a node or make it terminal
+        return False
+    '''
+    Build the decision tree through recursive splitting
+    
+    Params: node = current node to split, depth = current depth, min_size = minimum number of data records a node is responsible for
+    Returns: 
+    '''
     def split(self,node,depth,min_size):
         left,right = node.left,node.right
-        
-        # check for no split
-        if left is None or right is None:
+       
+        # no split if left or right child are None
+        if left.empty or right.empty:
             node.left = node.right = self.terminal(left+right)
-            return
+            return 
 
-        # check for max depth
-        if depth >= self.max_depth:
+        # if max depth is reached set current nodes children to terminal 
+        if depth >= 10:
             node.left = self.terminal(left)
             node.right = self.terminal(right)
-            return
+            return 
 
-        # process left child
-        if len(left) <= min_size:
+        # Process left child
+        if len(left) <= min_size: # set as terminal if smaller than min size
             node.left = self.terminal(left)
         else:
+            # calculate best split point for left child and recursively split
             node.left = self.best_split(left)
             self.split(node.left,depth+1,min_size)
-
+            
         # process right child
         if len(right) <= min_size:
             node.right = self.terminal(right)
         else:
+            # calculate best split point for right child and recursively split
             node.right = self.best_split(right)
             self.split(node.right,depth+1,min_size)
 
-
-    # build the decision tree
+    '''
+    Build the decision tree model by calculating the initial best split point and then recursively splitting
+    
+    Params: data = dataframe, min_size = minimum number of records per node
+    Returns: Node() completed tree
+    '''
     def build_tree(self,data,min_size):
         root = self.best_split(data)
-        s = self.split(root,0,min_size)
+        self.split(root,0,min_size)
         return root
     
-    # predict based on a row of data
+    '''
+    Predict the target class for a new row of data
+    
+    Params: node = current node to split data, data = new data
+    Returns: predicted class for test data
+    '''
     def predict(self,node,data):
+        # check split for new data
         if data[node.feat] < node.thresh:
+            # if left child is a Node then move to that node
             if isinstance(node.left,Node):
                 return self.predict(node.left,data)
+            
+            # otherwise return the left childs value
             else:
                 return node.left
         else:
+            # if right child is a Node then move to that node
             if isinstance(node.right,Node):
                 return self.predict(node.right,data)
+            # otherwise return the right childs value
             else:
                 return node.right
-    
