@@ -4,21 +4,11 @@ import matplotlib.pyplot as plt
 
 def simple_moving_average(data,days):
     res = data['Adj Close'].rolling(window=days).mean()
-    return round(res.iloc[-1])
+    return round(res.iloc[-1],2)
 
 def exponential_moving_average(data,days):
     res = data['Adj Close'].ewm(span=days,adjust=False).mean()
-    return round(res.iloc[-1])
-
-def weekly_return(data,start_date,end_date):
-    data = data.loc[start_date:end_date,'Adj Close']
-    ret = 0
-    
-    prev = data[0]
-    for val in data[1:]:
-        ret += val - prev
-        prev = val
-    return round(ret,2)
+    return round(res.iloc[-1],2)
 
 def moving_avg_cross(data,days_short,days_long):
     short_avg = simple_moving_average(data,days_short)
@@ -68,7 +58,7 @@ def relative_strength_index(data,lower_thresh=30,upper_thresh=70,period=14):
     data['RSI'] = rsi['Adj Close']
     
     rsi = data['RSI'].iloc[-1]
-    return rsi > lower_thresh and rsi < upper_thresh
+    return rsi
     
 
 '''
@@ -112,5 +102,5 @@ def money_flow_index(data):
     # money flow index
     mfi = 100 - (100/(1 + mfr))
     
-    return mfi >= 30 and mfi <= 70
+    return mfi
        
