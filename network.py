@@ -3,9 +3,6 @@ import numpy as np
 import random
 import math
 
-'''
-Implementation of a multilayer perceptron network
-'''
 class Neural_Network:
     def __init__(self,inputs,targets):
         self.inputs = inputs # inputs for the mlp model
@@ -15,7 +12,9 @@ class Neural_Network:
         self.num_inputs = len(inputs) # total number of inputs
         
         self.weights = [random.random() for _ in range(self.input_size + 1)] # initialize weights randomly
-   
+        self.bias = 0.3
+        self.learning_rate = 0.05
+
     def sigmoid(self,x):
         return 1/(1 + np.exp(-x))
     
@@ -29,7 +28,29 @@ class Neural_Network:
         pass
     
     def train(self):
-        pass
+        prev_weights = self.weights
+        new_weights = []
+
+        #while prev_weights != new_weights:
+        for i in range(100):
+            prev_weights = new_weights
+
+            # for each training example and its label
+            for i in range(self.num_inputs):
+                y = self.predict(self.inputs[i])
+                e = self.mean_square_error(self.targets[i],y)
+                print(e)
+                
+                # if error is 0 continue, otherwise update weights
+                if e == 0:
+                    continue
+                elif e > 0:
+                    self.weights = self.add(self.weights,self.inputs[i])
+                else:
+                    self.weights = self.sub(self.weights,self.inputs[i])
+                    
+                new_weights = self.weights
+        return self.weights
         
     def predict(self,inputs):
         z = self.dot(self.weights,inputs)

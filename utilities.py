@@ -8,7 +8,7 @@ def simple_moving_average(data,days):
 
 def exponential_moving_average(data,days):
     res = data['Adj Close'].ewm(span=days,adjust=False).mean()
-    return round(res.iloc[-1],2)
+    return res#round(res.iloc[-1],2)
 
 def moving_avg_cross(data,days_short,days_long):
     short_avg = simple_moving_average(data,days_short)
@@ -32,7 +32,8 @@ def turtle(data):
     prev_prices = list(data['Adj Close'].iloc[-21:-1])
     highest = max(prev_prices)
     return curr_price > highest
-    
+
+
 '''
 Relative Strength Index (RSI): Momentum oscillator that measures velocity and magnitude of directional price movements
 - RSI crosses lower threshold -> buy
