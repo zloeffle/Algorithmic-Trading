@@ -8,7 +8,7 @@ def simple_moving_average(data,days):
 
 def exponential_moving_average(data,days):
     res = data['Adj Close'].ewm(span=days,adjust=False).mean()
-    return res#round(res.iloc[-1],2)
+    return round(res.iloc[-1],2)
 
 def simple_moving_avg_cross(data,days_short,days_long):
     short_avg = simple_moving_average(data,days_short)
@@ -65,12 +65,18 @@ def relative_strength_index(data,lower_thresh=30,upper_thresh=70,period=14):
     data['RSI'] = rsi['Adj Close']
     
     rsi = data['RSI'].iloc[-1]
-    return rsi
+    return round(rsi,2)
+    '''if rsi >= 70:
+        return -1
+    if rsi <= 30:
+        return 1
+    return 0'''
     
 
 '''
 Money Flow Index (MFI): technical oscillator that uses price and volume data for identifying overbought/oversold signals
-- MFI > 70 = overbought and MFI < 30 = oversold
+- MFI > 70 = overbought (sell) and MFI < 30 = oversold (buy)
+
 Formulas
 - Money Flow Index (MFI) = 100 - (100/(1 + MFR))
 - Money Flow Ratio (MFR) = Sum of 14 day positive flow / Sum of 14 day negative flow
@@ -109,5 +115,9 @@ def money_flow_index(data):
     # money flow index
     mfi = 100 - (100/(1 + mfr))
     
-    return mfi
+    if mfi <= 30:
+        return 1
+    if mfi >= 70:
+        return -1
+    return 0
        
