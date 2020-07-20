@@ -10,9 +10,15 @@ def exponential_moving_average(data,days):
     res = data['Adj Close'].ewm(span=days,adjust=False).mean()
     return res#round(res.iloc[-1],2)
 
-def moving_avg_cross(data,days_short,days_long):
+def simple_moving_avg_cross(data,days_short,days_long):
     short_avg = simple_moving_average(data,days_short)
     long_avg = simple_moving_average(data,days_long)
+    
+    return short_avg > long_avg
+
+def exponential_moving_avg_cross(data,days_short,days_long):
+    short_avg = exponential_moving_average(data,days_short)
+    long_avg = exponential_moving_average(data,days_long)
     
     return short_avg > long_avg
     

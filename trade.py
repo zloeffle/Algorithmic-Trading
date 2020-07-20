@@ -28,39 +28,46 @@ class Trader:
 
             # use data only up to start date for feature generation
             temp = data.loc[:start_date,:]
-                
+            
             # features
-            df.loc[t,'MA Cross'] = moving_avg_cross(temp,10,30)
+            df.loc[t,'SMA Cross'] = simple_moving_avg_cross(temp,20,30)
+            df.loc[t,'EMA Cross'] = exponential_moving_avg_cross(temp,20,30)
             df.loc[t,'Mean Reversion'] = mean_reversion(temp)
             #df.loc[t,'RSI'] = relative_strength_index(data)
             #df.loc[t,'MFI'] = money_flow_index(data)
+            
+            #df.loc[t,'5 Day SMA'] = simple_moving_average(temp,5)
+            #df.loc[t,'10 Day SMA'] = simple_moving_average(temp,10)
+            #df.loc[t,'20 Day SMA'] = simple_moving_average(temp,20)
+            #df.loc[t,'40 Day SMA'] = simple_moving_average(temp,40)
+            
             df.loc[t,'START OF WEEK ADJ CLOSE'] = data.loc[start_date,'Adj Close']
             df.loc[t,'END OF WEEK ADJ CLOSE'] = data.loc[end_date,'Adj Close']
             df.loc[t,'PROFIT'] = df.loc[t,'START OF WEEK ADJ CLOSE'] < df.loc[t,'END OF WEEK ADJ CLOSE']
-
+        
         df = df.round(2)
         return df
         
     def ANN(self,data):
         pass        
 
-    def backtest(self,stocks,month):
+    def backtest(self,stocks,start,end):
         results = pd.DataFrame()
 
-        for week in month:
-            end = pd.date_range(start=week,periods=5)[-1]
-            print(end)
+        for s in stocks:
+            data = yf.download(s,period='1y')
+            data = data.loc[:end,:]
+            dates = data.loc[start:end,:].index
             
-            data = self.create_features(stocks,week,end)
-            results.loc[week,'MA CROSS ERROR'] = sum(data['MA Cross'] == data['PROFIT'])
-            results.loc[week,'MEAN REVERSION ERROR'] = sum(data['Mean Reversion'] == data['PROFIT'])
-        print(results)
+            for date in dates:
+                
+            break
+            
 if __name__ == '__main__':
     t = Trader()
 
     train = pd.read_csv('train.csv',index_col='Ticker')    
-    tickers = list(train.index)
+    tickers = list(train.index)[:10]
     
-    june = ['2020-06-01','2020-06-08','2020-06-15','2020-06-22','2020-06-29']
-    july = ['2020-07-06','2020-07-13']
-    t.backtest(tickers,june)
+    t.backtest(tickers,'2020-06-01','2020-06-30')
+    

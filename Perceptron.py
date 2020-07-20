@@ -20,7 +20,7 @@ class MLP:
     Returns the activation value
     '''
     def activation(self,n):
-        if n > 0:
+        if n >= 0:
             return 1
         return 0
         
@@ -32,8 +32,8 @@ class MLP:
         new_weights = []
         
         # iterate until weights do not change
-        #while prev_weights != new_weights:
-        for i in range(1000):
+        while prev_weights != new_weights:
+        #for i in range(1000):
             prev_weights = new_weights
             # for each training example and its label
             for i in range(self.num_inputs):
@@ -92,11 +92,11 @@ if __name__ == '__main__':
     targets = [0, 1, 1, 1]
     pcn = MLP(inputs, targets)
 
-    # OR gate
+    '''# OR gate
     pcn.train()
     outputs = [pcn.predict(p) for p in inputs]
     print(outputs, targets)
-    assert outputs == targets
+    assert outputs == targets'''
 
     # AND gate
     inputs = [[0, 0], [0, 1], [1, 0], [1, 1]]
