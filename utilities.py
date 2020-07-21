@@ -25,7 +25,7 @@ Relative Strength Index (RSI): Momentum oscillator that measures velocity and ma
 - RSI crosses upper threshold -> sell
 returns: original dataframe with RSI column
 '''
-def relative_strength_index(data,lower_thresh=30,upper_thresh=70,period=14):
+def relative_strength_index(data,lower_thresh=30,upper_thresh=80,period=14):
     data = data['Adj Close']
     data = data.iloc[-period:]
     difference = data.diff()
@@ -46,11 +46,6 @@ def relative_strength_index(data,lower_thresh=30,upper_thresh=70,period=14):
     rsi = data['RSI'].iloc[-1]
     return round(rsi,2)
 
-    '''if rsi >= 70:
-        return -1
-    if rsi <= 30:
-        return 1
-    return 0'''
     
 
 '''

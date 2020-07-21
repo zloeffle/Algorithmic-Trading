@@ -87,5 +87,5 @@ class Robinhood:
         
 if __name__ == '__main__':
     client = Robinhood()
-    col = client.get_collection('software-service')
-    
+    col = client.get_collection('100-most-popular')
+    print(col)
