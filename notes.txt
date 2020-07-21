@@ -1,0 +1,7 @@
+TODO
+- figure out quantity
+- stop when cash is too low
+
+
+
+- Lower RSI corresponds with lower price, higher rsi corresponds to higher price

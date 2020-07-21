@@ -9,18 +9,6 @@ def simple_moving_average(data,days):
 def exponential_moving_average(data,days):
     res = data['Adj Close'].ewm(span=days,adjust=False).mean()
     return round(res.iloc[-1],2)
-
-def simple_moving_avg_cross(data,days_short,days_long):
-    short_avg = simple_moving_average(data,days_short)
-    long_avg = simple_moving_average(data,days_long)
-    
-    return short_avg > long_avg
-
-def exponential_moving_avg_cross(data,days_short,days_long):
-    short_avg = exponential_moving_average(data,days_short)
-    long_avg = exponential_moving_average(data,days_long)
-    
-    return short_avg > long_avg
     
 '''
 Buy if 30 day MA crosses below 90 day MA
@@ -29,15 +17,6 @@ def mean_reversion(data):
     thirty_day_ma = simple_moving_average(data,30)
     ninety_day_ma = simple_moving_average(data,90)
     return thirty_day_ma < ninety_day_ma
-
-'''
-Buy if stock is at a 20 day high
-'''
-def turtle(data):
-    curr_price = data['Adj Close'].iloc[-1]
-    prev_prices = list(data['Adj Close'].iloc[-21:-1])
-    highest = max(prev_prices)
-    return curr_price > highest
 
 
 '''
@@ -66,6 +45,7 @@ def relative_strength_index(data,lower_thresh=30,upper_thresh=70,period=14):
     
     rsi = data['RSI'].iloc[-1]
     return round(rsi,2)
+
     '''if rsi >= 70:
         return -1
     if rsi <= 30:
