@@ -5,7 +5,6 @@ import robin_stocks as rs
 import yfinance as yf
 import pandas as pd
 import numpy as np
-#import db
 
 from bs4 import BeautifulSoup
 
@@ -15,7 +14,6 @@ class Robinhood:
     password = None
     auth_token = None
     refresh_token = None
-    #database = db.Database('stocks')
     
     def __init__(self):
         self.device_token = self.GenerateDeviceToken() # generate device token upon initialization
@@ -67,28 +65,8 @@ class Robinhood:
         return logout
     
     '''
-    returns a list of current prices for input stocks
+    Uses web scraping to retrieve a list of stocks from the specified robinhood collection
     '''
-    def get_prices(self, stocks):
-        try:
-            p = [round(float(i),2) for i in rs.get_latest_price(stocks)]
-        except TypeError:
-            print('Stock not found')
-        return p
-    
-    '''
-    input: list of ticker symbols
-    out: list of names corresponding to the input list
-    '''
-    def get_names(self, stocks):
-        temp = rs.get_instruments_by_symbols(stocks)
-        names = []
-        for t in temp:
-            if t is not None:
-                names.append(t.get('name'))
-        return names
-    
-    # scrapes Robinhood and returns the tickers associated with the specified collection
     def get_collection(self, collection):
         url = 'https://robinhood.com/collections/' + collection
         res = requests.get(url)

@@ -28,36 +28,10 @@ class Neural_Network:
         pass
     
     def train(self):
-        prev_weights = self.weights
-        new_weights = []
-
-        #while prev_weights != new_weights:
-        for i in range(100):
-            prev_weights = new_weights
-
-            # for each training example and its label
-            for i in range(self.num_inputs):
-                y = self.predict(self.inputs[i])
-                e = self.mean_square_error(self.targets[i],y)
-                print(e)
-                
-                # if error is 0 continue, otherwise update weights
-                if e == 0:
-                    continue
-                elif e > 0:
-                    self.weights = self.add(self.weights,self.inputs[i])
-                else:
-                    self.weights = self.sub(self.weights,self.inputs[i])
-                    
-                new_weights = self.weights
-        return self.weights
+        pass
         
     def predict(self,inputs):
-        z = self.dot(self.weights,inputs)
-        a = self.sigmoid(z)
-        #print('W*X: %f  Activation: %d' % (z,a))
-        return a
-        
+        pass        
     
     '''
     Return dot product of two vectors

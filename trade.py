@@ -50,7 +50,7 @@ class Trader:
 if __name__ == '__main__':
     t = Trader(500)
 
-    tickers = ['SNAP','BAC','UBER','KO','LUV','GM','DKNG','HUYA','LYFT']
+    tickers = ['RUN','']
     start = '2020-05-01'
     end = '2020-05-29'
     for s in tickers:
