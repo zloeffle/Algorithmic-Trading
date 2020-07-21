@@ -33,7 +33,6 @@ class Trader:
         temp = data.loc[start:end,:] 
         for row in temp.index:
             signal = relative_strength_index(data.loc[:row,:])
-            #results.loc[row,'RSI'] = signal
             
             if signal >= 70:
                 results.loc[row,'SIGNAL'] = -1
@@ -41,66 +40,76 @@ class Trader:
                 results.loc[row,'SIGNAL'] = 1
             else:
                 results.loc[row,'SIGNAL'] = 0    
-            
+            results.loc[row,'RSI'] = signal
+
         # add adjusted closing prices for our date range to result dataframe
         results['ADJ CLOSE'] = temp['Adj Close']
         results = results.round(2)
         return data,results
-    
+
     def backtest(self,stock,start,end):
         portfolio = {}
-        portfolio_value = 0
-        
+
         # iterate through input stocks
         data,results = self.generate_features(stock,start,end)       
     
         # iterate rows in result dataframe
         for row in results.index: 
             row = row.strftime('%Y-%m-%d')
-            #action = None
-            
+            profit = 0
+
             # check for buy signal
             if results.loc[row,'SIGNAL'] == 1:
-                # if current stock is not in portfolio, add it and adjust cash balance/portfolio value according to purchase price
-                if not stock in portfolio:                        
-                    portfolio[stock] = [results.loc[row,'ADJ CLOSE']]
-                    portfolio_value += results.loc[row,'ADJ CLOSE']
-                    self.cash -= results.loc[row,'ADJ CLOSE']
-                    
-                    action = 'Buying %s for %.2f' % (stock,results.loc[row,'ADJ CLOSE'])
+                print(stock)
+                print(portfolio)
+                print(results.loc[:row,:])
+                shares = int(input('Enter shares to buy: '))
+                
+                if not stock in portfolio:           
+                    portfolio[stock] = [(results.loc[row,'ADJ CLOSE'],shares)]   
+                    action = 'Buying %d shares of %s' % (shares,stock)              
                 else:
-                    # calculate how many shares to purchase
-                    portfolio[stock].append(results.loc[row,'ADJ CLOSE'])
-                    portfolio_value += results.loc[row,'ADJ CLOSE']
-                    self.cash -= results.loc[row,'ADJ CLOSE']
-                    
-                    action = 'Buying more %s for %.2f' % (stock,results.loc[row,'ADJ CLOSE'])
+                    if shares == 0:
+                        action = 'Not buying more shares of %s' % (stock)
+                    else:
+                        portfolio[stock].append((results.loc[row,'ADJ CLOSE'],shares))
+                        action = 'Buying %d more shares of %s' % (shares,stock)
 
             # check for sell signal
             elif results.loc[row,'SIGNAL'] == -1:
                 if stock in portfolio:
-                    profit = results.loc[row,'ADJ CLOSE']*len(portfolio[stock]) - sum(portfolio[stock])
-                    self.cash += results.loc[row,'ADJ CLOSE']*len(portfolio[stock])
-                    portfolio_value -= sum(portfolio[stock])
-                    del portfolio[stock]
-                    
-                    action = 'Selling %s for $%.2f profit = %.2f' % (stock,results.loc[row,'ADJ CLOSE'],profit)
+                    sell_price = results.loc[row,'ADJ CLOSE']
+                    print(s)
+                    print(portfolio)
+                    print(results.loc[:row,:])
+                    shares = int(input('Enter shares to sell: '))
+                    if shares == 0:
+                        print('Not selling anymore shares of %s' % (stock))
+                    else:
+                        tot_shares = 0
+                        for item in portfolio[stock]:
+                            tot_shares += item[1]
+                            profit += (item[0] * item[1])
+                        profit = (sell_price * tot_shares) - profit
+                        action = 'Sold %s for profit of %.2f' % (stock,profit)
+                        del portfolio[stock]
                 else:
                     action = '%s not owned so cannot sell' % (stock)
             else:
                 action = 'HOLD'
             
             results.loc[row,'ACTION'] = action
-            results.loc[row,'RSI'] = relative_strength_index(data.loc[:row])
-            results.loc[row,'CASH'] = self.cash
+            results.loc[row,'PROFIT'] = profit
         return results,portfolio
 
 if __name__ == '__main__':
     t = Trader(500)
 
-    train = pd.read_csv('train.csv',index_col='Ticker')    
-    tickers = list(train.index)
-
-    res,port = t.backtest(tickers[10],'2020-06-01','2020-07-17')
-    print(res)
-    print(port)
+    tickers = ['SNAP','BAC','UBER','KO','LUV','GM','DKNG','HUYA','LYFT']
+    start = '2020-05-01'
+    end = '2020-05-29'
+    for s in tickers:
+        res,port = t.backtest(s,start,end)
+        print(res)
+        print(port)
+    
