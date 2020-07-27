@@ -25,7 +25,7 @@ Relative Strength Index (RSI): Momentum oscillator that measures velocity and ma
 - RSI crosses upper threshold -> sell
 returns: original dataframe with RSI column
 '''
-def relative_strength_index(data,lower_thresh=30,upper_thresh=80,period=14):
+def relative_strength_index(data,period=14):
     data = data['Adj Close']
     data = data.iloc[-period:]
     difference = data.diff()
@@ -46,7 +46,13 @@ def relative_strength_index(data,lower_thresh=30,upper_thresh=80,period=14):
     rsi = data['RSI'].iloc[-1]
     return round(rsi,2)
 
-    
+def rsi_signal(rsi,lower_thresh=30,upper_thresh=70):
+    if rsi <= lower_thresh:
+        return 1
+    elif rsi >= upper_thresh:
+        return -1
+    else:
+        return 0
 
 '''
 Money Flow Index (MFI): technical oscillator that uses price and volume data for identifying overbought/oversold signals
@@ -89,10 +95,13 @@ def money_flow_index(data):
 
     # money flow index
     mfi = 100 - (100/(1 + mfr))
-    
-    if mfi <= 30:
+    return mfi
+
+def mfi_signal(mfi,lower_thresh=20,upper_thresh=80):
+    if mfi <= lower_thresh:
         return 1
-    if mfi >= 70:
+    elif mfi >= upper_thresh:
         return -1
-    return 0
+    else:
+        return 0
        

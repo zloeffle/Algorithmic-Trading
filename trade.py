@@ -27,21 +27,21 @@ class Trader:
         self.portfolio_value = None
         
     def generate_features(self,stock,start,end):
-        data = yf.download(stock,period='1y') # retrieve 1 years worth of historical data from yahoo finance
+        data = yf.download(stock,period='2y') # retrieve 1 years worth of historical data from yahoo finance
         results = pd.DataFrame(index=data.loc[start:end].index) # set dates as index for result dataframe
 
         # add signal feature to result dataframe
         temp = data.loc[start:end,:] 
         for row in temp.index:
-            signal = relative_strength_index(data.loc[:row,:])
+            rsi = relative_strength_index(data.loc[:row,:])
+            mfi = money_flow_index(data.loc[:row,:])
+            rsi_sig = rsi_signal(rsi)
+            mfi_sig = mfi_signal(mfi)
             
-            if signal >= 80:
-                results.loc[row,'SIGNAL'] = -1
-            elif signal <= 15:
-                results.loc[row,'SIGNAL'] = 1
-            else:
-                results.loc[row,'SIGNAL'] = 0    
-            results.loc[row,'RSI'] = signal
+            results.loc[row,'RSI SIGNAL'] = rsi_sig
+            results.loc[row,'RSI'] = rsi
+            results.loc[row,'MFI SIGNAL'] = mfi_sig
+            results.loc[row,'MFI'] = mfi
 
         # add adjusted closing prices for our date range to result dataframe
         results['ADJ CLOSE'] = temp['Adj Close']
@@ -57,10 +57,11 @@ class Trader:
 
 if __name__ == '__main__':
     trader = Trader(500)
-    start = '2020-06-01'
-    end = '2020-07-17'
+    start = '2019-06-03'
+    end = '2019-07-21'
     
-    tickers = client.get_collection('100-most-popular')
+    #tickers = client.get_collection('100-most-popular')
+    tickers = ['TWTR','F','GE','LYFT','UBER','CHWY']
     trader.backtest(tickers,start,end)
         
     
