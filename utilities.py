@@ -42,6 +42,7 @@ def relative_strength_index(data,period=14):
     rsi = rsi.reset_index()
     data = data.reset_index()
     data['RSI'] = rsi['Adj Close']
+    #print(data)
     
     rsi = data['RSI'].iloc[-1]
     return round(rsi,2)
@@ -91,7 +92,10 @@ def money_flow_index(data):
         else:
             neg += val*-1
     #print(pos,neg)
-    mfr = pos/neg
+    if neg == 0:
+        mfr = 1
+    else:
+        mfr = pos/neg
 
     # money flow index
     mfi = 100 - (100/(1 + mfr))
