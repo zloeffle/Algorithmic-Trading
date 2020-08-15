@@ -1,6 +1,8 @@
 from flask import Flask, render_template, redirect, request
+
 from robinhood import *
 from trade import *
+
 import utilities
 import random
 
@@ -22,7 +24,7 @@ Watchlist and portfolio also includes buy/sell recomendations for each stock
 '''
 @app.route('/home', methods=['GET', 'POST'])
 def home():
-    pass
+    return render_template('home.html')
 
 if __name__ == '__main__':
     app.run(port=5000)
