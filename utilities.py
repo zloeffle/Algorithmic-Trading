@@ -47,7 +47,7 @@ def relative_strength_index(data,period=14):
     rsi = data['RSI'].iloc[-1]
     return round(rsi,2)
 
-def rsi_signal(rsi,lower_thresh=30,upper_thresh=70):
+def rsi_signal(rsi,lower_thresh=30,upper_thresh=80):
     if rsi <= lower_thresh:
         return 1
     elif rsi >= upper_thresh:

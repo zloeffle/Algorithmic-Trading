@@ -12,7 +12,7 @@ from robinhood import *
 from db import *
 
 import matplotlib.pyplot as plt
-path = r"C:\Users\zloef\db\test.db"
+path = r"C:\Users\zloef\db\algorithmic_trading.db"
 client = Robinhood()
 db = Database(path)
  
@@ -24,7 +24,6 @@ class Trader:
     def generate_features(self,stock,start,end):
         data = yf.download(stock,period='2y') # retrieve 1 years worth of historical data from yahoo finance
         results = pd.DataFrame(index=data.loc[start:end].index) # set dates as index for result dataframe
-        #results = {}
         
         # add signal feature to result dataframe
         temp = data.loc[start:end,:] 
@@ -39,24 +38,15 @@ class Trader:
         results['ADJ CLOSE'] = temp['Adj Close']
         results = results.round(2)
         return results
-    
-    def backtest(self,stocks,start,end):
-        data = {}
-        for s in stocks:
-            results = self.generate_features(s,start,end)
-            print(s,results)
-            print()
 
-    def simulate(self,stocks,start,end,cash):
+    def simulate(self,stocks,start,end):
         dates = self.generate_features(stocks[0],start,end).index
         records = {}
-        portfolio = []
 
         i = 0
         for date in dates:
             for stock in stocks:
                 res = self.generate_features(stock,start,date)
-                print(stock)
                 
                 try:
                     # data to write to db
@@ -66,19 +56,20 @@ class Trader:
                     rsi_sig = res['RSI SIGNAL'].iloc[-1]
                     action = 'HOLD'
 
-                    # buy signal
+                    # BUY 
                     if rsi_sig == 1:
                         action = 'BUY'
-                    elif rsi_sig == -1:
+                        db.update_portfolio((stock,price,1,action),flag=1)
+                        db.insert_trade_history((date,stock,price,rsi,action))
+                    # SELL
+                    if rsi_sig == -1:
                         action = 'SELL'
-
-                    records[i] = [date,stock,price,rsi,rsi_sig,action]
+                        db.update_portfolio((stock,price,1,action))
+                        db.insert_trade_history((date,stock,price,rsi,action))
+                    
                 except:
                     continue
-                i += 1
-    
-        results = pd.DataFrame.from_dict(records,orient='index',columns=['date','ticker','price','rsi','rsi signal','action'])
-        results.to_sql('trade_history1',con=db.conn,if_exists='replace',index=False)               
+                i += 1           
         
 if __name__ == '__main__':
     trader = Trader()
@@ -86,7 +77,6 @@ if __name__ == '__main__':
     start = '2020-07-01'
     end = '2020-07-31'
     
-    tickers = client.get_collection('most-popular-under-25')
-    #trader.backtest(tickers,start,end)
-    trader.simulate(tickers,start,end,500)
+    t = ['CPRX','CRBP','SNE','TWTR','SNAP','NKE']
+    trader.simulate(t,start,end)
     
