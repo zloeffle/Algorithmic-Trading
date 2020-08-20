@@ -2,23 +2,6 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-def simple_moving_average(data,days):
-    res = data['Adj Close'].rolling(window=days).mean()
-    return round(res.iloc[-1],2)
-
-def exponential_moving_average(data,days):
-    res = data['Adj Close'].ewm(span=days,adjust=False).mean()
-    return round(res.iloc[-1],2)
-    
-'''
-Buy if 30 day MA crosses below 90 day MA
-'''
-def mean_reversion(data):
-    thirty_day_ma = simple_moving_average(data,30)
-    ninety_day_ma = simple_moving_average(data,90)
-    return thirty_day_ma < ninety_day_ma
-
-
 '''
 Relative Strength Index (RSI): Momentum oscillator that measures velocity and magnitude of directional price movements
 - RSI crosses lower threshold -> buy
@@ -47,7 +30,7 @@ def relative_strength_index(data,period=14):
     rsi = data['RSI'].iloc[-1]
     return round(rsi,2)
 
-def rsi_signal(rsi,lower_thresh=30,upper_thresh=80):
+def rsi_signal(rsi,lower_thresh=30,upper_thresh=70):
     if rsi <= lower_thresh:
         return 1
     elif rsi >= upper_thresh:
@@ -56,56 +39,50 @@ def rsi_signal(rsi,lower_thresh=30,upper_thresh=80):
         return 0
 
 '''
-Money Flow Index (MFI): technical oscillator that uses price and volume data for identifying overbought/oversold signals
-- MFI > 70 = overbought (sell) and MFI < 30 = oversold (buy)
-
-Formulas
-- Money Flow Index (MFI) = 100 - (100/(1 + MFR))
-- Money Flow Ratio (MFR) = Sum of 14 day positive flow / Sum of 14 day negative flow
-- Typical Price (TP) = (high + low + close) / 3
-- Raw Money Flow (RMF) = TP * Volume
+Bollinger Bands
+- Volatility indicator
+- Comprises of 2 lines plotted 2 standard deviations from a m (around 20) period simple moving avg line
+- Bands widen during increased volatility and shrink during decreased
 '''
-def money_flow_index(data):
-    mfi = 0
-    df = data.tail(15)
-    
-    # calculate typical price of last 14 days
-    df['Typical Price'] = (df['High'] + df['Low'] + df['Close'])/3
-    df = df.round(2)
-    df['Temp'] = df['Typical Price'].shift(1)
+def bollinger_bands(data,n=20):
+    df = data.copy()
+    df['SMA'] = df['Adj Close'].rolling(n).mean()
+    df['UP'] = df['SMA'] + 2*df['SMA'].rolling(n).std()
+    df['DOWN'] = df['SMA'] - 2*df['SMA'].rolling(n).std()
+    df['WIDTH'] = df['UP'] - df['DOWN']
     df.dropna(inplace=True)
-    df['RMF Sign'] = df['Typical Price'] >= df['Temp']
-    df.drop('Temp',axis=1,inplace=True)
 
-    # calculate RMF
-    df['RMF'] = df['Typical Price'] * df['Volume']
-    for row in list(df.index):
-        if not df.loc[row,'RMF Sign']:
-            df.loc[row,'RMF'] *= -1
+    print(df)
+    return df
 
-    # calculate MFR
-    pos,neg = 0,0
-    mfr = 0
-    for val in df['RMF'].values:
-        if val >= 0:
-            pos += val
-        else:
-            neg += val*-1
-    #print(pos,neg)
-    if neg == 0:
-        mfr = 1
-    else:
-        mfr = pos/neg
+'''
+Average True Range
+- Volatility indicator
+- Accounts the market movement each day in either direction & averaging them out
+- Focuses on total price movement and conveys how widly the market is swinging as it moves
+'''
+def average_true_range(data,n):
+    df = data.copy()
+    df['HIGH-LOW'] = abs(df['High']-df['Low'])
+    df['HIGH-PREV CLOSE'] = abs(df['High'] - df['Adj Close'].shift(1))
+    df['LOW-PREV CLOSE'] = abs(df['Low'] - df['Adj Close'].shift(1))
+    
+    df['TRUE RANGE'] = df[['HIGH-LOW','HIGH-PREV CLOSE','LOW-PREV CLOSE']].max(axis=1,skipna=False)
+    df['AVERAGE TRUE RANGE'] = df['TRUE RANGE'].rolling(n).mean()
+    df = df[['TRUE RANGE','AVERAGE TRUE RANGE']]
 
-    # money flow index
-    mfi = 100 - (100/(1 + mfr))
-    return mfi
+    print(df)
+    return df
 
-def mfi_signal(mfi,lower_thresh=20,upper_thresh=80):
-    if mfi <= lower_thresh:
-        return 1
-    elif mfi >= upper_thresh:
-        return -1
-    else:
-        return 0
-       
+'''
+Average Directional Index
+ - Way to measure the strength of a trend
+ - Vals range 0-100 where 100 is very strong and 0 is weak
+ - Non directional, only focuses on the strength of a trend not the direction
+'''
+
+'''
+On Balance Volume
+- Momentum indicator which uses changes in volume to indicate future price movements
+- Rising obv reflects positive volume pressure that can lead to higher prices, falling predicts price declines
+'''
