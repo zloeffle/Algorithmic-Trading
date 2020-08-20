@@ -37,7 +37,7 @@ class Database:
                 self.cursor.execute(sql,(stock,))
                 self.conn.commit()
             else:
-                sql = ''' INSERT INTO portfolio(ticker,price,shares,signal) VALUES(?,?,?,?) '''
+                sql = ''' INSERT INTO portfolio(ticker,shares) VALUES(?,?) '''
                 self.cursor.execute(sql,data)
                 self.conn.commit()
         # SELLING STOCK
@@ -56,8 +56,6 @@ class Database:
                 sql = ''' UPDATE portfolio SET shares=shares-1 WHERE ticker=? '''
                 self.cursor.execute(sql,(stock,))
                 self.conn.commit()
-
-
 
     def delete_portfolio(self,data):
         sql = 'DELETE FROM portfolio WHERE ticker=?'

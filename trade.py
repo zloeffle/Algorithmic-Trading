@@ -12,7 +12,7 @@ from robinhood import *
 from db import *
 
 import matplotlib.pyplot as plt
-path = r"C:\Users\zloeffle\db\trading.db"
+path = r"C:\Users\zloef\db\trading.db"
 client = Robinhood()
 db = Database(path)
  
@@ -55,12 +55,10 @@ class Trader:
                     rsi_sig = res['RSI SIGNAL'].iloc[-1]
                     action = 'HOLD'
 
-                    print(stock,date,rsi)
-                    print()
                     # BUY 
                     if rsi_sig == 1:
                         action = 'BUY'
-                        db.update_portfolio((stock,price,1,action),flag=1)
+                        db.update_portfolio((stock,1),flag=1)
                         db.insert_trade_history((date,stock,price,rsi,action))
                     # SELL
                     if rsi_sig == -1:
@@ -75,9 +73,11 @@ class Trader:
 if __name__ == '__main__':
     trader = Trader()
     
-    start = '2020-06-01'
-    end = '2020-08-14'
+    start = '2020-08-05'
+    end = '2020-08-05'
     
-    t = ['AMD','MSFT','TWTR','SNAP']
-    trader.simulate(t,start,end)
+    tickers = client.get_collection('technology')
+    tickers = tickers[:50]
+    print(tickers)
+    trader.simulate(tickers,start,end)
     
