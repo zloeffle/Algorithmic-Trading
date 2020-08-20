@@ -12,7 +12,7 @@ from robinhood import *
 from db import *
 
 import matplotlib.pyplot as plt
-path = r"C:\Users\zloef\db\algorithmic_trading.db"
+path = r"C:\Users\zloeffle\db\trading.db"
 client = Robinhood()
 db = Database(path)
  
@@ -41,7 +41,6 @@ class Trader:
 
     def simulate(self,stocks,start,end):
         dates = self.generate_features(stocks[0],start,end).index
-        records = {}
 
         i = 0
         for date in dates:
@@ -56,6 +55,8 @@ class Trader:
                     rsi_sig = res['RSI SIGNAL'].iloc[-1]
                     action = 'HOLD'
 
+                    print(stock,date,rsi)
+                    print()
                     # BUY 
                     if rsi_sig == 1:
                         action = 'BUY'
@@ -74,9 +75,9 @@ class Trader:
 if __name__ == '__main__':
     trader = Trader()
     
-    start = '2020-07-01'
-    end = '2020-07-31'
+    start = '2020-06-01'
+    end = '2020-08-14'
     
-    t = ['CPRX','CRBP','SNE','TWTR','SNAP','NKE']
+    t = ['AMD','MSFT','TWTR','SNAP']
     trader.simulate(t,start,end)
     

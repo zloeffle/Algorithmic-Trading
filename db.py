@@ -69,6 +69,3 @@ class Database:
                   VALUES(?,?,?,?,?) '''
         self.cursor.execute(sql,data)
         self.conn.commit()
-
-if __name__ == '__main__':
-    create_connection(r"C:\Users\zloef\db\algorithmic_trading.db")
