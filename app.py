@@ -9,23 +9,10 @@ import random
 app = Flask(__name__) 
 client = Robinhood()
 
-@app.route('/', methods=['GET', 'POST'])
-def login():
-    pass
-
-@app.route('/logout')
-def logout():
-    user.logout()
-    return redirect('/')
-
-''' 
-Homepage displaying a users current holdings, watchlist, and buy/sell functionality
-Watchlist and portfolio also includes buy/sell recomendations for each stock
-'''
-@app.route('/home', methods=['GET', 'POST'])
+@app.route('/')
 def home():
     return render_template('home.html')
 
 if __name__ == '__main__':
-    app.run(port=5000)
+    app.run(debug=True)
     

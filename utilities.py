@@ -51,7 +51,9 @@ def bollinger_bands(data,n=20):
     df['DOWN'] = df['SMA'] - 2*df['SMA'].rolling(n).std()
     df['WIDTH'] = df['UP'] - df['DOWN']
     df.dropna(inplace=True)
-
+    df = df.round(2)
+    df = df[['SMA','UP','DOWN','WIDTH']]
+    
     print(df)
     return df
 
@@ -61,7 +63,7 @@ Average True Range
 - Accounts the market movement each day in either direction & averaging them out
 - Focuses on total price movement and conveys how widly the market is swinging as it moves
 '''
-def average_true_range(data,n):
+def average_true_range(data,n=20):
     df = data.copy()
     df['HIGH-LOW'] = abs(df['High']-df['Low'])
     df['HIGH-PREV CLOSE'] = abs(df['High'] - df['Adj Close'].shift(1))
@@ -70,7 +72,8 @@ def average_true_range(data,n):
     df['TRUE RANGE'] = df[['HIGH-LOW','HIGH-PREV CLOSE','LOW-PREV CLOSE']].max(axis=1,skipna=False)
     df['AVERAGE TRUE RANGE'] = df['TRUE RANGE'].rolling(n).mean()
     df = df[['TRUE RANGE','AVERAGE TRUE RANGE']]
-
+    df = df.round(2)
+    df.dropna(inplace=True)
     print(df)
     return df
 

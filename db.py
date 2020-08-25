@@ -17,7 +17,9 @@ class Database:
         return conn
 
     def update_portfolio(self,data,flag=0):
-        pass
-    
+        sql = ''' INSERT INTO portfolio(ticker,shares) VALUES(?,?) '''
+
     def update_trade_history(self,data):
-        pass
+        sql = ''' INSERT INTO trade_history(date,ticker,price,rsi,action,collection) VALUES(?,?,?,?,?,?) '''
+        self.cursor.execute(sql,data)
+        self.conn.commit()

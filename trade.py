@@ -19,19 +19,44 @@ db = Database(path)
 '''
 Common trading strategies & ML algorithms for generating BUY/SELL signals
 '''
-class Trader:           
-        
-    def generate_features(self,stock,start,end):
-        data = yf.download(stock,period='2y') # retrieve 1 years worth of historical data from yahoo finance
-        results = pd.DataFrame(index=data.loc[start:end].index) # set dates as index for result dataframe
-        
-        # add signal feature to result dataframe
-        temp = data.loc[start:end,:] 
-        
-        
+class Trader:            
+    def simulate(self,stocks,collection,start,end):
+        s = stocks[0]
+        dates = yf.download(s,start=start,end=end,period='2y').index
+        dates = dates.to_pydatetime()
+
+        results = pd.DataFrame(columns=['Date','Ticker','Price','RSI','Action'])
+        i = 0
+        for d in dates:
+            d = d.strftime('%Y-%m-%d')
+
+            for stock in stocks:
+                try:
+                    data = yf.download(stock,end=d,period='2y')
+                    data = data.loc[:d,:]
+                    
+                    price = round(data['Adj Close'].iloc[-1],2)
+                    rsi = relative_strength_index(data)
+                    signal = rsi_signal(rsi)
+                    action = 'HOLD'
+
+                    if signal == 1:
+                        action = 'BUY'
+                    if signal == -1:
+                        action = 'SELL'
+
+                    db.update_trade_history((d,stock,price,rsi,action,collection)) 
+                except:
+                    print('Stock %s not found' % (stock))
+                    stocks.remove(stock)
+
 if __name__ == '__main__':
     trader = Trader()
     
-    start = '2020-08-05'
-    end = '2020-08-05'
-    
+    start = datetime(2020,8,3).strftime('%Y-%m-%d')
+    end = datetime(2020,8,4).strftime('%Y-%m-%d')
+
+    collections = ['finance','technology','oil-and-gas','software-service','energy','social-media','consumer-product','health']
+    for col in collections:
+        tickers = client.get_collection(col)
+        trader.simulate(tickers,col,start,end)
