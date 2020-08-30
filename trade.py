@@ -16,11 +16,15 @@ path = r"C:\Users\zloef\db\trading.db"
 client = Robinhood()
 db = Database(path)
  
-'''
-Common trading strategies & ML algorithms for generating BUY/SELL signals
-'''
 class Trader:            
+    '''
+    Creates dataframe showing trading signals and price for a stock on each date in the specified range
+    stock: ticker
+    start: start date
+    end: end date
+    '''
     def generate_features(self,stock,start,end):
+        # check that historical data for input stock can be found
         try:
             dates = yf.download(stock,start=start,end=end,period='2y').index
             dates = dates.to_pydatetime()
@@ -28,6 +32,7 @@ class Trader:
             print('%s not found' % stock)
             return None
 
+        # download historical data and create the resultant dataframe
         data = yf.download(stock,end=end,period='1y').round(2)
         results = pd.DataFrame(columns=['PRICE','RSI','RSI-SIGNAL','BB-SIGNAL'],index=dates)
         for d in dates:
@@ -39,12 +44,10 @@ class Trader:
             bb = bollinger_bands(data.loc[:d,:])
             bb_signal = bollinger_bands_signal(bb)
     
-            results.loc[d,:] = [price,rsi,rsi_sig,bb_signal['SIGNAL']]
+            results.loc[d,:] = [price,rsi,rsi_sig,int(bb_signal['SIGNAL'])]
+            
         results['DATE'] = results.index
         return results
-
-    def test(self,data):
-        pass
 
 if __name__ == '__main__':
     trader = Trader()
@@ -52,6 +55,4 @@ if __name__ == '__main__':
     start = datetime(2020,6,1).strftime('%Y-%m-%d')
     end = datetime(2020,8,25).strftime('%Y-%m-%d')
   
-    tickers = client.get_collection('finance')[20:60]
-    res=trader.generate_features(tickers[0],start,end)
-    print(res)
+    

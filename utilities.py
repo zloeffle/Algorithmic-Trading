@@ -67,35 +67,3 @@ def bollinger_bands_signal(data):
     df.loc[df['TEMP'] == False,'SIGNAL'] = -1
     df.drop('TEMP',axis=1,inplace=True)
     return df.iloc[-1]
-
-'''
-Average True Range
-- Volatility indicator
-- Accounts the market movement each day in either direction & averaging them out
-- Focuses on total price movement and conveys how widly the market is swinging as it moves
-'''
-def average_true_range(data,n=20):
-    df = data.copy()
-    df['HIGH-LOW'] = abs(df['High']-df['Low'])
-    df['HIGH-PREV CLOSE'] = abs(df['High'] - df['Adj Close'].shift(1))
-    df['LOW-PREV CLOSE'] = abs(df['Low'] - df['Adj Close'].shift(1))
-    
-    df['TRUE RANGE'] = df[['HIGH-LOW','HIGH-PREV CLOSE','LOW-PREV CLOSE']].max(axis=1,skipna=False)
-    df['AVERAGE TRUE RANGE'] = df['TRUE RANGE'].rolling(n).mean()
-    df = df[['TRUE RANGE','AVERAGE TRUE RANGE']]
-    df = df.round(2)
-    df.dropna(inplace=True)
-    return df['AVERAGE TRUE RANGE'].iloc[-1]
-
-'''
-Average Directional Index
- - Way to measure the strength of a trend
- - Vals range 0-100 where 100 is very strong and 0 is weak
- - Non directional, only focuses on the strength of a trend not the direction
-'''
-
-'''
-On Balance Volume
-- Momentum indicator which uses changes in volume to indicate future price movements
-- Rising obv reflects positive volume pressure that can lead to higher prices, falling predicts price declines
-'''
