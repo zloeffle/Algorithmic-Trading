@@ -43,19 +43,30 @@ Bollinger Bands
 - Volatility indicator
 - Comprises of 2 lines plotted 2 standard deviations from a m (around 20) period simple moving avg line
 - Bands widen during increased volatility and shrink during decreased
+- overbought if price is closer to upper band, oversold if price is closer to lower band
 '''
 def bollinger_bands(data,n=20):
     df = data.copy()
     df['SMA'] = df['Adj Close'].rolling(n).mean()
-    df['UP'] = df['SMA'] + 2*df['SMA'].rolling(n).std()
-    df['DOWN'] = df['SMA'] - 2*df['SMA'].rolling(n).std()
-    df['WIDTH'] = df['UP'] - df['DOWN']
+    df['UPPER'] = df['SMA'] + 2*df['SMA'].rolling(n).std()
+    df['LOWER'] = df['SMA'] - 2*df['SMA'].rolling(n).std()
+    df['WIDTH'] = df['UPPER'] - df['LOWER']
     df.dropna(inplace=True)
     df = df.round(2)
-    df = df[['SMA','UP','DOWN','WIDTH']]
-    
-    print(df)
+    df = df[['Adj Close','UPPER','LOWER','WIDTH']]
     return df
+
+def bollinger_bands_signal(data):
+    df = data.copy()
+    df['DIFF UPPER'] = df['Adj Close'] - df['UPPER']
+    df['DIFF LOWER'] = df['Adj Close'] - df['LOWER']
+    df = df.abs()
+
+    df['TEMP'] = df['DIFF UPPER'] > df['DIFF LOWER']
+    df.loc[df['TEMP'] == True,'SIGNAL'] = 1
+    df.loc[df['TEMP'] == False,'SIGNAL'] = -1
+    df.drop('TEMP',axis=1,inplace=True)
+    return df.iloc[-1]
 
 '''
 Average True Range
@@ -74,8 +85,7 @@ def average_true_range(data,n=20):
     df = df[['TRUE RANGE','AVERAGE TRUE RANGE']]
     df = df.round(2)
     df.dropna(inplace=True)
-    print(df)
-    return df
+    return df['AVERAGE TRUE RANGE'].iloc[-1]
 
 '''
 Average Directional Index

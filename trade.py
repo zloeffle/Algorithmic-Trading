@@ -5,7 +5,7 @@ import yfinance as yf
 import math
 import random
 import json
-from datetime import datetime,date
+from datetime import datetime,date,timedelta
 
 from utilities import *
 from robinhood import *
@@ -20,43 +20,38 @@ db = Database(path)
 Common trading strategies & ML algorithms for generating BUY/SELL signals
 '''
 class Trader:            
-    def simulate(self,stocks,collection,start,end):
-        s = stocks[0]
-        dates = yf.download(s,start=start,end=end,period='2y').index
-        dates = dates.to_pydatetime()
+    def generate_features(self,stock,start,end):
+        try:
+            dates = yf.download(stock,start=start,end=end,period='2y').index
+            dates = dates.to_pydatetime()
+        except:
+            print('%s not found' % stock)
+            return None
 
-        results = pd.DataFrame(columns=['Date','Ticker','Price','RSI','Action'])
-        i = 0
+        data = yf.download(stock,end=end,period='1y').round(2)
+        results = pd.DataFrame(columns=['PRICE','RSI','RSI-SIGNAL','BB-SIGNAL'],index=dates)
         for d in dates:
-            d = d.strftime('%Y-%m-%d')
+            price = data.loc[d,'Adj Close']
+            
+            rsi = relative_strength_index(data.loc[:d,:])
+            rsi_sig = rsi_signal(rsi)
 
-            for stock in stocks:
-                try:
-                    data = yf.download(stock,end=d,period='2y')
-                    data = data.loc[:d,:]
-                    
-                    price = round(data['Adj Close'].iloc[-1],2)
-                    rsi = relative_strength_index(data)
-                    signal = rsi_signal(rsi)
-                    action = 'HOLD'
+            bb = bollinger_bands(data.loc[:d,:])
+            bb_signal = bollinger_bands_signal(bb)
+    
+            results.loc[d,:] = [price,rsi,rsi_sig,bb_signal['SIGNAL']]
+        results['DATE'] = results.index
+        return results
 
-                    if signal == 1:
-                        action = 'BUY'
-                    if signal == -1:
-                        action = 'SELL'
-
-                    db.update_trade_history((d,stock,price,rsi,action,collection)) 
-                except:
-                    print('Stock %s not found' % (stock))
-                    stocks.remove(stock)
+    def test(self,data):
+        pass
 
 if __name__ == '__main__':
     trader = Trader()
     
-    start = datetime(2020,8,3).strftime('%Y-%m-%d')
-    end = datetime(2020,8,4).strftime('%Y-%m-%d')
-
-    collections = ['finance','technology','oil-and-gas','software-service','energy','social-media','consumer-product','health']
-    for col in collections:
-        tickers = client.get_collection(col)
-        trader.simulate(tickers,col,start,end)
+    start = datetime(2020,6,1).strftime('%Y-%m-%d')
+    end = datetime(2020,8,25).strftime('%Y-%m-%d')
+  
+    tickers = client.get_collection('finance')[20:60]
+    res=trader.generate_features(tickers[0],start,end)
+    print(res)

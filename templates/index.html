@@ -1,0 +1,38 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container">   
+  <form method='POST'>
+    <div class="row">
+      <div class="col">
+        <input type="text" class="form-control" placeholder="Ticker" id="Ticker">
+      </div>
+      <div class="col">
+        <input type="text" class="form-control" placeholder="Start Date" id='StartDate'>
+      </div>
+      <div class="col">
+        <input type="text" class="form-control" placeholder="End Date" id="EndDate">
+      </div>
+      <div class="col">
+        <button id="button" class="btn btn-sm btn-primary btn-block" type="submit">Submit</button>
+      </div>
+    </div>
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <td>DATE</td>
+            <td>PRICE</td>
+            <td>RSI</td>
+            <td>RSI-SIGNAL</td>
+            <td>BB-SIGNAL</td>
+          </tr>
+        </thead>
+        <tbody>
+          
+        </tbody>
+      </table>
+    </div>
+  </form>
+</div>
+{% endblock %}
