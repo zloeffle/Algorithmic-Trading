@@ -52,7 +52,9 @@ class Trader:
 if __name__ == '__main__':
     trader = Trader()
     
-    start = datetime(2020,6,1).strftime('%Y-%m-%d')
-    end = datetime(2020,8,25).strftime('%Y-%m-%d')
-  
-    
+    start = datetime(2020,8,3).strftime('%Y-%m-%d')
+    end = datetime(2020,8,28).strftime('%Y-%m-%d')
+    tickers = client.get_collection('finance')
+    cash = 500
+
+    trader.backtest(tickers,start,end,cash)
