@@ -58,12 +58,14 @@ def bollinger_bands(data,n=20):
 
 def bollinger_bands_signal(data):
     df = data.copy()
-    df['DIFF UPPER'] = df['Adj Close'] - df['UPPER']
-    df['DIFF LOWER'] = df['Adj Close'] - df['LOWER']
-    df = df.abs()
+    if not df.empty:
+        df['DIFF UPPER'] = df['Adj Close'] - df['UPPER']
+        df['DIFF LOWER'] = df['Adj Close'] - df['LOWER']
+        df = df.abs()
 
-    df['TEMP'] = df['DIFF UPPER'] > df['DIFF LOWER']
-    df.loc[df['TEMP'] == True,'SIGNAL'] = 1
-    df.loc[df['TEMP'] == False,'SIGNAL'] = -1
-    df.drop('TEMP',axis=1,inplace=True)
-    return df.iloc[-1]
+        df['TEMP'] = df['DIFF UPPER'] > df['DIFF LOWER']
+        df.loc[df['TEMP'] == True,'SIGNAL'] = 1
+        df.loc[df['TEMP'] == False,'SIGNAL'] = -1
+        df.drop('TEMP',axis=1,inplace=True)
+        return df['SIGNAL'].iloc[-1]
+    return 0

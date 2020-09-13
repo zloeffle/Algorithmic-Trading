@@ -5,13 +5,13 @@
   <form action="" method="POST">
     <div class="row">
       <div class="col">
-        <label for="Ticker">Ticker</label>
-        <input type="text" name="Ticker" value="{{ request.form['Ticker'] }}">
-
+        <label for="Tickers">Tickers</label>
+        <input type="text" name="Tickers" placeholder="Ex: msft,aapl,snap" value="{{ request.form['Tickers'] }}">
+        
         <label for="StartDate">Start Date</label>
-        <input type="text" name="StartDate" value="{{ request.form['StartDate'] }}">
+        <input type="text" name="StartDate" placeholder="YYYY-MM-DD" value="{{ request.form['StartDate'] }}">
         <label for="EndDate">End Date</label>
-        <input type="text" name="EndDate" value="{{ request.form['EndDate'] }}">
+        <input type="text" name="EndDate" placeholder="YYYY-MM-DD" value="{{ request.form['EndDate'] }}">
         <input type="submit" value="Submit">
       </div>
     </div>
@@ -23,10 +23,11 @@
           <thead>
             <tr>
               <td>DATE</td>
+              <td>TICKER</td>
               <td>PRICE</td>
               <td>RSI</td>
-              <td>RSI-SIGNAL</td>
-              <td>BB-SIGNAL</td>
+              <td>ACTION</td>
+              <td>PROFIT</td>
             </tr>
           </thead>
             {% block body %}

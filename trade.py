@@ -8,20 +8,30 @@ import json
 from datetime import datetime,date,timedelta
 
 from utilities import *
-#from robinhood import *
+from robinhood import *
 #from db import *
 
 import matplotlib.pyplot as plt
-path = r"C:\Users\zloef\db\trading.db"
-#client = Robinhood()
-#db = Database(path)
- 
-class Trader:            
+
+client = Robinhood()
+
+'''
+db = Database(path)
+path = r"" 
+'''
+
+class Trader:        
+        
     '''
     Creates dataframe showing trading signals and price for a stock on each date in the specified range
-    stock: ticker
-    start: start date
-    end: end date
+    
+    Params
+    - stock: ticker for stock (string)
+    - start: starting date for period (datetime)
+    - end: ending date for period (datetime)
+    
+    Returns
+    - pandas dataframe containing feature values for each date in specified range
     '''
     def generate_features(self,stock,start,end):
         # check that historical data for input stock can be found
@@ -35,6 +45,8 @@ class Trader:
         # download historical data and create the resultant dataframe
         data = yf.download(stock,end=end,period='1y').round(2)
         results = pd.DataFrame(columns=['PRICE','RSI','RSI-SIGNAL','BB-SIGNAL'],index=dates)
+        
+        # get price and signal features for each date
         for d in dates:
             price = data.loc[d,'Adj Close']
             
@@ -44,18 +56,36 @@ class Trader:
             bb = bollinger_bands(data.loc[:d,:])
             bb_signal = bollinger_bands_signal(bb)
     
-            results.loc[d,:] = [price,rsi,rsi_sig,int(bb_signal['SIGNAL'])]
+            results.loc[d,:] = [price,rsi,rsi_sig,int(bb_signal)]
             
         results['DATE'] = results.index
         return results
 
+
+    '''
+    Gets stocks to buy/sell for each date in the given period based on values from the signal features
+    
+    Params
+    - stocks: list of ticker strings
+    - start: starting date for period (datetime)
+    - end: ending date for period (datetime)
+    
+    Returns
+    - tuple containing 2 dictionaries for stocks that should be bought/sold (key: ticker values: date,price,signal features)
+    '''
     def get_stocks(self,stocks,start,end):
+        # initialize dictionaries to return
         to_buy = {}
         to_sell = {}
 
+        # generate features for each stock
         for stock in stocks:
             data = self.generate_features(stock,start,end)
+            
+            # check that feature data is not null
             if data is not None:
+                
+                # generate action for each date in feature data
                 for date in data.index:
                     rsi = data.loc[date,'RSI-SIGNAL']
                     bb = data.loc[date,'BB-SIGNAL']
@@ -73,10 +103,9 @@ class Trader:
                             
         return to_buy,to_sell
 
-    def simulate(self,stocks,start,end,cash):
+    def simulate(self,stocks,start,end):
         portfolio = {}
         portfolio_value = 0
-        total_value = 0
         trade_history = pd.DataFrame(columns=['DATE','TICKER','PRICE','RSI','ACTION','PROFIT'])
         to_buy,to_sell = self.get_stocks(stocks,start,end)
 
@@ -84,37 +113,29 @@ class Trader:
         for stock in to_buy:
             data = to_buy[stock]
             portfolio[stock] = data
-            cash -= data['price']
             portfolio_value += data['price']
             trade_history.loc[i,:] = [data['date'],stock,data['price'],data['rsi'],'BUY',0]                
             i += 1
-        
+            
         for stock in to_sell:
             data = to_sell[stock]
             portfolio_value -= portfolio[stock]['price']
             portfolio.pop(stock)
-            cash += data['price']
             profit = data['price']-to_buy[stock]['price']
-            trade_history.loc[i,:] = [data['date'],stock,data['price'],data['rsi'],'SELL',profit]
+            trade_history.loc[i,:] = [data['date'],stock,data['price'],data['rsi'],'SELL',round(profit,2)]
             i += 1
 
-        portfolio_value = round(portfolio_value,2)
-        total_value = portfolio_value + cash
-        total_profit = trade_history['PROFIT'].sum()
-        print(trade_history)
-        print(portfolio)
-        print('Portfolio value: %.2f' % (portfolio_value))
-        print('Cash: %.2f' % (cash))
-        print('Total Value: %.2f' % (total_value))
-        print('Total Profit: %.2f' % (total_profit))
-        trade_history.to_csv('data/health.csv')
-        return trade_history,portfolio,portfolio_value,cash,total_value,total_profit
+        trade_history['DATE'] = pd.to_datetime(trade_history['DATE'])
+        trade_history = trade_history.sort_values('DATE')
+        return trade_history.round(2)
 
 if __name__ == '__main__':
     trader = Trader()
     
-    start = datetime(2020,8,3).strftime('%Y-%m-%d')
-    end = datetime(2020,9,1).strftime('%Y-%m-%d')
-    tickers = client.get_collection('health')
-    print(len(tickers))
-    trader.simulate(tickers,start,end,1000)
+    start = datetime(2020,8,1).strftime('%Y-%m-%d')
+    end = datetime(2020,8,14).strftime('%Y-%m-%d')
+    tickers = client.get_collection('100-most-popular')[:10]
+    df = trader.simulate(tickers,start,end)
+    print(df)
+    for row in df.index:
+        print(df.loc[row,'TICKER'])

@@ -1,0 +1,15 @@
+{% extends 'simulate.html' %}
+
+{% block body %}
+    <tbody>
+    {% for row in data.index %}
+        <tr>
+            <td>{{data.loc[row,'DATE'].strftime('%Y-%m-%d')}}</td>
+            <td>{{data.loc[row,'TICKER']}}</td>
+            <td>{{data.loc[row,'PRICE']}}</td>
+            <td>{{data.loc[row,'RSI']}}</td>
+            <td>{{data.loc[row,'ACTION']}}</td>
+            <td>{{data.loc[row,'PROFIT']}}</td>
+        </tr>
+    {% endfor %}
+{% endblock %}
