@@ -8,12 +8,12 @@ import json
 from datetime import datetime,date,timedelta
 
 from utilities import *
-from robinhood import *
+#from robinhood import *
 #from db import *
 
 import matplotlib.pyplot as plt
 path = r"C:\Users\zloef\db\trading.db"
-client = Robinhood()
+#client = Robinhood()
 #db = Database(path)
  
 class Trader:            

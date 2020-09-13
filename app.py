@@ -1,6 +1,6 @@
 from flask import Flask, render_template, redirect, request
 
-from robinhood import *
+#from robinhood import *
 from trade import *
 
 import utilities
@@ -9,7 +9,7 @@ from datetime import datetime
 import pandas as pd
 
 app = Flask(__name__) 
-client = Robinhood()
+#client = Robinhood()
 trader = Trader()
 
 @app.route('/',methods=['GET','POST'])
