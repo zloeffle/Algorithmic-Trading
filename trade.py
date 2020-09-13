@@ -53,8 +53,8 @@ class Trader:
             bb = bollinger_bands(data.loc[:d,:])
             bb_signal = bollinger_bands_signal(bb)
     
-            results.loc[d,:] = [price,rsi,rsi_sig,int(bb_signal)]
-            
+            results.loc[d,:] = ['$'+str(price),rsi,rsi_sig,int(bb_signal)]
+
         results['DATE'] = results.index
         return results
 
@@ -100,18 +100,34 @@ class Trader:
                             
         return to_buy,to_sell
 
+    '''
+    Simulate a trading scenario for a list of stocks over a specified date range
+
+    Params
+    - stocks: list of ticker symbols
+    - start: start date
+    - end: end date
+
+    Returns
+    - dataframe that shows the ticker, price, RSI score, recommended action, and profit from selling the stock on each respective date
+    '''
     def simulate(self,stocks,start,end):
         portfolio = {}
         portfolio_value = 0
+
+        # initialize columns for result dataframe
         trade_history = pd.DataFrame(columns=['DATE','TICKER','PRICE','RSI','ACTION','PROFIT'])
+
+        # seperate stocks that generate buy/sell signals at anypoint during the specified date range
         to_buy,to_sell = self.get_stocks(stocks,start,end)
 
         i = 0
+        # traverse buy/sell groups and populate result dataframe with trade records 
         for stock in to_buy:
             data = to_buy[stock]
             portfolio[stock] = data
             portfolio_value += data['price']
-            trade_history.loc[i,:] = [data['date'],stock,data['price'],data['rsi'],'BUY',0]                
+            trade_history.loc[i,:] = [data['date'],stock.upper(),'$'+str(data['price']),data['rsi'],'BUY','$'+str(0)]                
             i += 1
             
         for stock in to_sell:
@@ -119,9 +135,10 @@ class Trader:
             portfolio_value -= portfolio[stock]['price']
             portfolio.pop(stock)
             profit = data['price']-to_buy[stock]['price']
-            trade_history.loc[i,:] = [data['date'],stock,data['price'],data['rsi'],'SELL',round(profit,2)]
+            trade_history.loc[i,:] = [data['date'],stock.upper(),'$'+str(data['price']),data['rsi'],'SELL','$' + str(round(profit,2))]
             i += 1
 
+        # convert date column to datetime type and sort records by date
         trade_history['DATE'] = pd.to_datetime(trade_history['DATE'])
         trade_history = trade_history.sort_values('DATE')
         return trade_history.round(2)
