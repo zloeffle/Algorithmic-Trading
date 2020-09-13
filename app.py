@@ -16,7 +16,7 @@ trader = Trader()
 def index():
     if request.method == 'POST':
         # get form data
-        ticker = request.form.get('Ticker')
+        ticker = request.form.get('Ticker').upper()
         start = request.form.get('StartDate')
         end = request.form.get('EndDate')
 
