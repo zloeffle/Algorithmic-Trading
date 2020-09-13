@@ -41,7 +41,7 @@ class Trader:
 
         # download historical data and create the resultant dataframe
         data = yf.download(stock,end=end,period='1y').round(2)
-        results = pd.DataFrame(columns=['PRICE','RSI','RSI-SIGNAL','BB-SIGNAL'],index=dates)
+        results = pd.DataFrame(columns=['PRICE','10-DAY-MA','25-DAY-MA','RSI','RSI-SIGNAL','BB-SIGNAL'],index=dates)
         
         # get price and signal features for each date
         for d in dates:
@@ -52,8 +52,11 @@ class Trader:
 
             bb = bollinger_bands(data.loc[:d,:])
             bb_signal = bollinger_bands_signal(bb)
-    
-            results.loc[d,:] = [price,rsi,rsi_sig,int(bb_signal)]
+
+            ma_10 = moving_average(data,10,d)
+            ma_25 = moving_average(data,25,d)
+
+            results.loc[d,:] = [price,ma_10,ma_25,rsi,rsi_sig,int(bb_signal)]
 
         results['DATE'] = results.index
         return results
@@ -142,15 +145,13 @@ class Trader:
 
         # convert date column to datetime type and sort records by date
         trade_history['DATE'] = pd.to_datetime(trade_history['DATE'])
-        trade_history = trade_history.sort_values('DATE')
+        trade_history = trade_history.sort_values('DATE',ascending=False)
         return trade_history.round(2)
 
 if __name__ == '__main__':
     trader = Trader()
     
-    start = datetime(2020,8,1).strftime('%Y-%m-%d')
-    end = datetime(2020,8,14).strftime('%Y-%m-%d')
-    data = yf.download('MSFT',period='2y').round(2)
-    avg10 = moving_average(data,10,end)
-    avg25 = moving_average(data,25,end)
-    print(avg10,avg25)
+    start = datetime(2020,6,1).strftime('%Y-%m-%d')
+    end = datetime(2020,9,11).strftime('%Y-%m-%d')
+    df = trader.generate_features('MSFT',start,end)
+    print(df)
