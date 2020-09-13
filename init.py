@@ -1,15 +1,13 @@
 from flask import Flask, render_template, redirect, request
 
-from robinhood import *
 from trade import *
-
 import utilities
+
 import random
 from datetime import datetime
 import pandas as pd
 
 app = Flask(__name__) 
-client = Robinhood()
 trader = Trader()
 
 @app.route('/',methods=['GET','POST'])

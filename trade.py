@@ -8,12 +8,9 @@ import json
 from datetime import datetime,date,timedelta
 
 from utilities import *
-from robinhood import *
 #from db import *
 
 import matplotlib.pyplot as plt
-
-client = Robinhood()
 
 '''
 db = Database(path)
@@ -134,8 +131,4 @@ if __name__ == '__main__':
     
     start = datetime(2020,8,1).strftime('%Y-%m-%d')
     end = datetime(2020,8,14).strftime('%Y-%m-%d')
-    tickers = client.get_collection('100-most-popular')[:10]
-    df = trader.simulate(tickers,start,end)
-    print(df)
-    for row in df.index:
-        print(df.loc[row,'TICKER'])
+    
