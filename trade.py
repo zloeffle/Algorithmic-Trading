@@ -53,7 +53,7 @@ class Trader:
             bb = bollinger_bands(data.loc[:d,:])
             bb_signal = bollinger_bands_signal(bb)
     
-            results.loc[d,:] = ['$'+str(price),rsi,rsi_sig,int(bb_signal)]
+            results.loc[d,:] = [price,rsi,rsi_sig,int(bb_signal)]
 
         results['DATE'] = results.index
         return results
@@ -126,16 +126,18 @@ class Trader:
         for stock in to_buy:
             data = to_buy[stock]
             portfolio[stock] = data
-            portfolio_value += data['price']
-            trade_history.loc[i,:] = [data['date'],stock.upper(),'$'+str(data['price']),data['rsi'],'BUY','$'+str(0)]                
+            #portfolio_value += data['price']
+            price = '$'+str(data['price'])
+            trade_history.loc[i,:] = [data['date'],stock.upper(),price,data['rsi'],'BUY','$'+str(0)]                
             i += 1
             
         for stock in to_sell:
             data = to_sell[stock]
-            portfolio_value -= portfolio[stock]['price']
+            #portfolio_value -= portfolio[stock]['price']
             portfolio.pop(stock)
             profit = data['price']-to_buy[stock]['price']
-            trade_history.loc[i,:] = [data['date'],stock.upper(),'$'+str(data['price']),data['rsi'],'SELL','$' + str(round(profit,2))]
+            price = '$'+str(data['price'])
+            trade_history.loc[i,:] = [data['date'],stock.upper(),price,data['rsi'],'SELL','$' + str(round(profit,2))]
             i += 1
 
         # convert date column to datetime type and sort records by date
@@ -148,4 +150,7 @@ if __name__ == '__main__':
     
     start = datetime(2020,8,1).strftime('%Y-%m-%d')
     end = datetime(2020,8,14).strftime('%Y-%m-%d')
-    
+    data = yf.download('MSFT',period='2y').round(2)
+    avg10 = moving_average(data,10,end)
+    avg25 = moving_average(data,25,end)
+    print(avg10,avg25)
