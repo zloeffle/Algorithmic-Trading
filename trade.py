@@ -9,12 +9,12 @@ from datetime import datetime,date,timedelta
 
 from utilities import *
 from robinhood import *
-from db import *
+#from db import *
 
 import matplotlib.pyplot as plt
 path = r"C:\Users\zloef\db\trading.db"
 client = Robinhood()
-db = Database(path)
+#db = Database(path)
  
 class Trader:            
     '''
