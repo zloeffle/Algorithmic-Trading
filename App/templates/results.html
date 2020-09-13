@@ -1,0 +1,15 @@
+{% extends 'index.html' %}
+
+{% block body %}
+    <h2 style="text-align: center;">{{stock}}</h2>
+    <tbody>
+    {% for row in data.index %}
+        <tr>
+        <td>{{data.loc[row,'DATE'].strftime('%Y-%m-%d')}}</td>
+        <td>{{data.loc[row,'PRICE']}}</td>
+        <td>{{data.loc[row,'RSI']}}</td>
+        <td>{{data.loc[row,'RSI-SIGNAL']}}</td>
+        <td>{{data.loc[row,'BB-SIGNAL']}}</td>
+        </tr>
+    {% endfor %}
+{% endblock %}
