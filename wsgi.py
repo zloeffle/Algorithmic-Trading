@@ -7,6 +7,10 @@ import random
 from datetime import datetime
 import pandas as pd
 
+'''
+Web Server Gateway Interface
+'''
+
 app = Flask(__name__) 
 trader = Trader()
 

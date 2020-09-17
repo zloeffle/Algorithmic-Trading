@@ -1,6 +1,52 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.stats import linregress
+
+################# DESCRIPTORS #################
+def support_level(data,start,end):
+    df = data.copy()
+    df = df['Adj Close'].round(2)
+    price = df.min()
+    date = df.idxmin()
+    print(price,date)
+    return price,date
+
+def resistance_level(data,start,end):
+    df = data.copy()
+    df = df['Adj Close'].round(2)
+    price = df.max()
+    date = df.idxmax()
+    print(price,date)
+    return price,date
+
+def trend(data,start,end):
+    df = data.copy()
+    df = df[['Adj Close','High','Low']].round(2)
+    df['date_id'] = ((df.index.date - df.index.date.min())).astype('timedelta64[D]')
+    df['date_id'] = df['date_id'].dt.days + 1
+    
+    start = (df.loc[start,'date_id'],df.loc[start,'Adj Close'])
+    end = (df.loc[end,'date_id'],df.loc[end,'Adj Close'])
+    
+    slope = round((end[1] - start[1]) / (end[0]-start[0]),2)
+    
+    if slope > 0:
+        return 'UP'
+    return 'DOWN'
+
+def breakout(data,start,end,price):
+    support = support_level(data,start,end)
+    resistance = resistance_level(data,start,end)
+    
+    if price > support[0]:
+        return 'UP'
+    elif price < resistance[0]:
+        return 'DOWN'
+    else:
+        return 'NONE'
+
+################# INDICATORS #################
 
 def simple_moving_average(data,days,end_date):
     df = data.copy()

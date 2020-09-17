@@ -158,6 +158,10 @@ class Trader:
 if __name__ == '__main__':
     trader = Trader()
     
-    start = datetime(2019,1,1).strftime('%Y-%m-%d')
-    end = datetime(2019,12,31).strftime('%Y-%m-%d')
-    trader.simulate(['fisv','intc','orcl','hpq','ntap','csco'],start,end)
+    start = datetime(2020,8,26).strftime('%Y-%m-%d')
+    end = datetime(2020,9,2).strftime('%Y-%m-%d')
+    data = yf.download('msft',period='1y')
+
+    t = trend(data,start,end)
+    print(t)
+    
