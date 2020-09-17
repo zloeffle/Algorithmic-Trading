@@ -1,6 +1,7 @@
 {% extends 'simulate.html' %}
 
 {% block body %}
+    <h5 style="text-align: center;">Total Profit ${{profit}}</h2>
     <tbody>
     {% for row in data.index %}
         <tr>
@@ -12,4 +13,5 @@
             <td>{{data.loc[row,'PROFIT']}}</td>
         </tr>
     {% endfor %}
+    </tbody>
 {% endblock %}

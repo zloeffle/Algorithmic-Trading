@@ -41,72 +41,31 @@ class Trader:
 
         # download historical data and create the resultant dataframe
         data = yf.download(stock,end=end,period='2y').round(2)
-        results = pd.DataFrame(columns=['PRICE','SHORT-MA','LONG-MA','RSI','RSI-SIGNAL','BB-SIGNAL'],index=dates)
+        results = pd.DataFrame(columns=['PRICE','SHORT-MA','LONG-MA','BB-SIGNAL','RSI','TREND'],index=dates)
         
         # get price and signal features for each date
         for d in dates:
             price = data.loc[d,'Adj Close']
-            
-            rsi = relative_strength_index(data.loc[:d,:])
-            rsi_sig = rsi_signal(rsi)
 
+            # short and long simple moving averages
+            short_sma = simple_moving_average(data,5,d)
+            long_sma = simple_moving_average(data,15,d)
+            
+            # relative strength index
+            rsi = relative_strength_index(data.loc[:d,:])
+
+            # bollinger bands signal
             bb = bollinger_bands(data.loc[:d,:])
             bb_signal = bollinger_bands_signal(bb)
 
-            # exponential
-            #short_ma = exponential_moving_average(data,5,d)
-            #long_ma = exponential_moving_average(data,15,d)
-            short_ma = simple_moving_average(data,5,d)
-            long_ma = simple_moving_average(data,15,d)
-
-            results.loc[d,:] = [price,short_ma,long_ma,rsi,rsi_sig,int(bb_signal)]
+            # overall trend from the start date until the current date
+            trend = trend_direction(data,start,d)
+            
+            # insert row into result dataframe
+            results.loc[d,:] = [price,short_sma,long_sma,int(bb_signal),rsi,trend]
 
         results['DATE'] = results.index
         return results
-
-
-    '''
-    Gets stocks to buy/sell for each date in the given period based on values from the signal features
-    
-    Params
-    - stocks: list of ticker strings
-    - start: starting date for period (datetime)
-    - end: ending date for period (datetime)
-    
-    Returns
-    - tuple containing 2 dictionaries for stocks that should be bought/sold (key: ticker values: date,price,signal features)
-    '''
-    def get_stocks(self,stocks,start,end):
-        # initialize dictionaries to return
-        to_buy = {}
-        to_sell = {}
-
-        # generate features for each stock
-        for stock in stocks:
-            data = self.generate_features(stock,start,end)
-            
-            # check that feature data is not null
-            if data is not None:
-                
-                # generate action for each date in feature data
-                for date in data.index:
-                    rsi = data.loc[date,'RSI-SIGNAL']
-                    bb = data.loc[date,'BB-SIGNAL']
-                    short_ma = data.loc[date,'SHORT-MA']
-                    long_ma = data.loc[date,'LONG-MA']
-                    
-                    # BUY
-                    if rsi == 1 and bb == 1:
-                        if stock not in to_buy:
-                            date = date.to_pydatetime().strftime('%Y-%m-%d')
-                            to_buy[stock] = {'date':date,'price':data.loc[date,'PRICE'],'rsi':data.loc[date,'RSI']}
-                    # SELL
-                    if rsi == -1 and bb == -1:
-                        if stock in to_buy:
-                            date = date.to_pydatetime().strftime('%Y-%m-%d')
-                            to_sell[stock] = {'date':date,'price':data.loc[date,'PRICE'],'rsi':data.loc[date,'RSI']}
-                            
-        return to_buy,to_sell
 
     '''
     Simulate a trading scenario for a list of stocks over a specified date range
@@ -121,47 +80,63 @@ class Trader:
     '''
     def simulate(self,stocks,start,end):
         portfolio = {}
+
+        # initialize columns for result dataframe
         trade_history = pd.DataFrame(columns=['DATE','TICKER','PRICE','RSI','ACTION','PROFIT'])
 
+        # get date range for simulation
         dates = self.generate_features(stocks[0],start,end).index
+
         i = 0
+        # generate feature data for each stock
         for stock in stocks:
             data = self.generate_features(stock,start,end)
 
             for date in data.index:
                 price = data.loc[date,'PRICE']
+                short_ma = data.loc[date,'SHORT-MA']
+                long_ma = data.loc[date,'LONG-MA']
                 rsi = data.loc[date,'RSI']
-                signal_rsi = data.loc[date,'RSI-SIGNAL']
                 signal_bb = data.loc[date,'BB-SIGNAL']
+                trend = data.loc[date,'TREND']
 
+                # generate the approporiate action for each date from the signal features
                 action = 'HOLD'
                 profit = 0
-                if signal_rsi == 1 and signal_bb == 1:
+
+                # BUY
+                if short_ma > long_ma and signal_bb == 1 and rsi < 50:
                     if stock not in portfolio:
                         action = 'BUY'
                         portfolio[stock] = {'date':date,'price':data.loc[date,'PRICE'],'rsi':data.loc[date,'RSI']}
 
-                if signal_rsi == -1 and signal_bb == -1:
+                # SELL
+                if signal_bb == -1 and rsi > 80 and trend == 'UP':
                     if stock in portfolio:
                         action = 'SELL'
                         profit = price - portfolio[stock]['price']
                         portfolio.pop(stock)
+                
+                # reformat date and insert row into result dataframe
                 date = date.to_pydatetime().strftime('%Y-%m-%d')
                 trade_history.loc[i,:] = [date,stock.upper(),price,rsi,action,round(profit,2)]
                 i += 1
         
+        # compute total profit and sort rows by date
+        profit = trade_history['PROFIT'].sum()
         trade_history['DATE'] = pd.to_datetime(trade_history['DATE'])
         trade_history = trade_history.sort_values('DATE')
-        trade_history.to_csv('Backtesting/1/consumer-2019.csv',index=False)
-        return trade_history
+        #trade_history.to_csv('Backtesting/1/consumer-2019.csv',index=False)
+        return trade_history,profit
 
 if __name__ == '__main__':
     trader = Trader()
     
-    start = datetime(2020,8,26).strftime('%Y-%m-%d')
-    end = datetime(2020,9,2).strftime('%Y-%m-%d')
-    data = yf.download('msft',period='1y')
-
-    t = trend(data,start,end)
-    print(t)
+    start = datetime(2019,1,1).strftime('%Y-%m-%d')
+    end = datetime(2019,2,1).strftime('%Y-%m-%d')
+    data = yf.download('msft',period='2y')
+    #data = data.loc[start:end,:]
+    #print(data.iloc[0])
+    #print(data)
+    t = trend_direction(data,start,end)
     

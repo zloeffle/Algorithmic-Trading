@@ -45,12 +45,12 @@ def simulate():
         if start and end:
             start = datetime.strptime(start,'%Y-%m-%d').strftime('%Y-%m-%d')
             end = datetime.strptime(end,'%Y-%m-%d').strftime('%Y-%m-%d')
-            data = trader.simulate(tickers,start,end)
+            data,profit = trader.simulate(tickers,start,end)
 
             if box:
                 data = data[data['ACTION'] != 'HOLD']
 
-            return render_template('results_simulate.html',data=data)
+            return render_template('results_simulate.html',data=data,profit=profit)
     return render_template('simulate.html')
 
 @app.route('/learn/')

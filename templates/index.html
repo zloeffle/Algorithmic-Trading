@@ -7,14 +7,11 @@
       <div class="col">
         <h2 style="text-align: center;">Instructions</h2>
         <p>
-        On this page, you can enter the ticker symbol for a stock, along with your desired date range, and see historical price data as well as buy/sell signals that are
-        produced by two technical indicators, Relative Strength Index (RSI) and Bollinger Bands (BB). The purpose of this page is to help you gain a better understanding of 
-        historical price fluctuations for a stock, identify patterns, and see how these two technical indicators can be used to make predictions about what direction a stock may go
-        in the future.
+        
         </p>
+
         <p>
-        Simply enter the ticker symbol for the stock of your choosing along with your desired start/end dates in YYYY-M-D format. 1 represents a BUY signal, 0 represents HOLD, 
-        and -1 represents a SELL signal. Details about how these indicators work can be found by visiting this page: <a href="{{ url_for('learn')}}">Learning</a>
+        Simply enter the ticker symbol for the stock of your choosing along with your desired start/end dates in YYYY-M-D format.
         </p>
       </div>
     </div>
@@ -42,9 +39,9 @@
               <td>PRICE</td>
               <td>SHORT-MA</td>
               <td>LONG-MA</td>
-              <td>RSI</td>
-              <td>RSI-SIGNAL</td>
               <td>BB-SIGNAL</td>
+              <td>RSI</td>
+              <td>TREND</td>
             </tr>
           </thead>
             {% block body %}
