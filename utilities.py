@@ -2,16 +2,17 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-def moving_average(data,days,end_date):
+def simple_moving_average(data,days,end_date):
     df = data.copy()
     df = df.loc[:end_date,:]
     avg = df['Adj Close'].rolling(days).mean()
     return round(avg.iloc[-1],2)
 
-def moving_average_cross(short_avg,long_avg):
-    if short_avg > long_avg:
-        return 1
-    return -1
+def exponential_moving_average(data,days,end_date):
+    df = data.copy()
+    df = df.loc[:end_date,:]
+    avg = df['Adj Close'].ewm(days).mean()
+    return round(avg.iloc[-1],2)
 
 '''
 Relative Strength Index (RSI): Momentum oscillator that measures velocity and magnitude of directional price movements
