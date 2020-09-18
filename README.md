@@ -1,5 +1,5 @@
-#### Algorithmic Trading Assistant
+# Algorithmic Trading Assistant
 
-## Features
+### Features
 
-## Dependencies
+### Dependencies
