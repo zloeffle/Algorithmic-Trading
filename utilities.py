@@ -35,20 +35,6 @@ def trend_direction(data,start,end):
         return 'DOWN'
     return 'NONE'
 
-def trend_lines(data,start,end):
-    df = data.copy()
-
-def breakout_direction(data,start,end,price):
-    support = support_level(data,start,end)
-    resistance = resistance_level(data,start,end)
-    
-    if price > support[0]:
-        return 'UP'
-    elif price < resistance[0]:
-        return 'DOWN'
-    else:
-        return 'NONE'
-
 ################# INDICATORS #################
 
 def simple_moving_average(data,days,end_date):

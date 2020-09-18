@@ -123,7 +123,7 @@ class Trader:
                 i += 1
         
         # compute total profit and sort rows by date
-        profit = trade_history['PROFIT'].sum()
+        profit = round(trade_history['PROFIT'].sum(),2)
         trade_history['DATE'] = pd.to_datetime(trade_history['DATE'])
         trade_history = trade_history.sort_values('DATE')
         #trade_history.to_csv('Backtesting/1/consumer-2019.csv',index=False)
