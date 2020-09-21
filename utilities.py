@@ -38,6 +38,7 @@ def trend_direction(data,start,end):
 ################# INDICATORS #################
 
 def simple_moving_average(data,days,end_date):
+    days = int(days)
     df = data.copy()
     df = df.loc[:end_date,:]
     avg = df['Adj Close'].rolling(days).mean()

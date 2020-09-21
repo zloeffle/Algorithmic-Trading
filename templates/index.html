@@ -35,6 +35,12 @@
         <input type="text" name="StartDate" placeholder="YYYY-MM-DD" value="{{ request.form['StartDate'] }}">
         <label for="EndDate">End Date</label>
         <input type="text" name="EndDate" placeholder="YYYY-MM-DD" value="{{ request.form['EndDate'] }}">
+        <br>
+        <label for="ShortMA">Short Moving Average</label>
+        <input type="number" name="ShortMA" placeholder="Days" value="{{ request.form['ShortMA'] }}">
+        <label for="LongMA">Long Moving Average</label>
+        <input type="number" name="LongMA" placeholder="Days" value="{{ request.form['LongMA'] }}">
+
         <input type="submit" value="Submit">
       </div>
     </div>

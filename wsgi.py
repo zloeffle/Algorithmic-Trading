@@ -26,8 +26,10 @@ def index():
         if ticker and start and end:
             start = datetime.strptime(start,'%Y-%m-%d').strftime('%Y-%m-%d')
             end = datetime.strptime(end,'%Y-%m-%d').strftime('%Y-%m-%d')
+            short_ma = int(request.form.get('ShortMA'))
+            long_ma = int(request.form.get('LongMA'))
 
-            data = trader.generate_features(ticker,start,end)
+            data = trader.generate_features(ticker,start,end,short_ma,long_ma)
             data['DATE'] = pd.to_datetime(data['DATE'],format='%Y-%m-%d')
             
             return render_template('results_analyze.html',data=data,stock=ticker)
@@ -40,22 +42,20 @@ def simulate():
         tickers = request.form.get('Tickers').split(',')
         start = request.form.get('StartDate')
         end = request.form.get('EndDate')
+        short_ma = int(request.form.get('ShortMA'))
+        long_ma = int(request.form.get('LongMA'))
         box = request.form.get('Checkbox')
         
         if start and end:
             start = datetime.strptime(start,'%Y-%m-%d').strftime('%Y-%m-%d')
             end = datetime.strptime(end,'%Y-%m-%d').strftime('%Y-%m-%d')
-            data,profit = trader.simulate(tickers,start,end)
+            data,profit = trader.simulate(tickers,start,end,short_ma,long_ma)
 
             if box:
                 data = data[data['ACTION'] != 'HOLD']
 
             return render_template('results_simulate.html',data=data,profit=profit)
     return render_template('simulate.html')
-
-@app.route('/learn/')
-def learn():
-    return render_template('learn.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

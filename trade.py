@@ -30,7 +30,7 @@ class Trader:
     Returns
     - pandas dataframe containing feature values for each date in specified range
     '''
-    def generate_features(self,stock,start,end):
+    def generate_features(self,stock,start,end,short_ma,long_ma):
         # check that historical data for input stock can be found
         try:
             dates = yf.download(stock,start=start,end=end,period='2y').index
@@ -48,8 +48,8 @@ class Trader:
             price = data.loc[d,'Adj Close']
 
             # short and long simple moving averages
-            short_sma = simple_moving_average(data,5,d)
-            long_sma = simple_moving_average(data,15,d)
+            short_sma = simple_moving_average(data,short_ma,d)
+            long_sma = simple_moving_average(data,long_ma,d)
             
             # relative strength index
             rsi = relative_strength_index(data.loc[:d,:])
@@ -78,48 +78,40 @@ class Trader:
     Returns
     - dataframe that shows the ticker, price, RSI score, recommended action, and profit from selling the stock on each respective date
     '''
-    def simulate(self,stocks,start,end):
+    def simulate(self,stocks,start,end,short_ma,long_ma):
         portfolio = {}
 
         # initialize columns for result dataframe
         trade_history = pd.DataFrame(columns=['DATE','TICKER','PRICE','RSI','ACTION','PROFIT'])
 
         # get date range for simulation
-        dates = self.generate_features(stocks[0],start,end).index
+        dates = self.generate_features(stocks[0],start,end,short_ma,long_ma).index
 
         i = 0
         # generate feature data for each stock
         for stock in stocks:
-            data = self.generate_features(stock,start,end)
+            data = self.generate_features(stock,start,end,short_ma,long_ma)
 
             for date in data.index:
-                price = data.loc[date,'PRICE']
-                short_ma = data.loc[date,'SHORT-MA']
-                long_ma = data.loc[date,'LONG-MA']
-                rsi = data.loc[date,'RSI']
-                signal_bb = data.loc[date,'BB-SIGNAL']
-                trend = data.loc[date,'TREND']
-
                 # generate the approporiate action for each date from the signal features
-                action = 'HOLD'
+                price = data.loc[date,'PRICE']
+                action = self.signal(data,date)
                 profit = 0
 
                 # BUY
-                if short_ma > long_ma and signal_bb == 1 and rsi < 50:
+                if action == 'BUY':
                     if stock not in portfolio:
-                        action = 'BUY'
                         portfolio[stock] = {'date':date,'price':data.loc[date,'PRICE'],'rsi':data.loc[date,'RSI']}
 
                 # SELL
-                if signal_bb == -1 and rsi > 80 and trend == 'UP':
+                if action == 'SELL':
                     if stock in portfolio:
-                        action = 'SELL'
                         profit = price - portfolio[stock]['price']
                         portfolio.pop(stock)
                 
                 # reformat date and insert row into result dataframe
                 date = date.to_pydatetime().strftime('%Y-%m-%d')
-                trade_history.loc[i,:] = [date,stock.upper(),price,rsi,action,round(profit,2)]
+                trade_history.loc[i,:] = [date,stock.upper(),price,data.loc[date,'RSI'],action,round(profit,2)]
                 i += 1
         
         # compute total profit and sort rows by date
@@ -128,6 +120,26 @@ class Trader:
         trade_history = trade_history.sort_values('DATE')
         #trade_history.to_csv('Backtesting/1/consumer-2019.csv',index=False)
         return trade_history,profit
+
+    def signal(self,data,date):
+        action = 'HOLD'
+
+        price = data.loc[date,'PRICE']
+        short_ma = data.loc[date,'SHORT-MA']
+        long_ma = data.loc[date,'LONG-MA']
+        rsi = data.loc[date,'RSI']
+        signal_bb = data.loc[date,'BB-SIGNAL']
+        trend = data.loc[date,'TREND']
+
+        # BUY
+        if short_ma > long_ma and short_ma > price:
+            action = 'BUY'
+        
+        # SELL 
+        if rsi > 85:
+            action = 'SELL'
+
+        return action
 
 if __name__ == '__main__':
     trader = Trader()
