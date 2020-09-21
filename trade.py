@@ -1,4 +1,5 @@
 import os
+from time import time
 import pandas as pd
 import numpy as np
 import yfinance as yf
@@ -100,9 +101,9 @@ class Trader:
                 short_ma = data.loc[date,'SHORT-MA']
                 long_ma = data.loc[date,'LONG-MA']
                 rsi = data.loc[date,'RSI']
-                #signal_bb = data.loc[date,'BB-SIGNAL']
-                #trend = data.loc[date,'TREND']
-                action = self.signal(price,short_ma,long_ma,rsi)
+                signal_bb = data.loc[date,'BB-SIGNAL']
+                trend = data.loc[date,'TREND']
+                action = self.signal(price,short_ma,long_ma,rsi,signal_bb,trend)
                 profit = 0
 
                 # BUY
@@ -128,11 +129,11 @@ class Trader:
         #trade_history.to_csv('Backtesting/1/consumer-2019.csv',index=False)
         return trade_history,profit
 
-    def signal(self,price,short_ma,long_ma,rsi):
+    def signal(self,price,short_ma,long_ma,rsi,bb_signal,trend):
         action = 'HOLD'
 
         # BUY
-        if short_ma > long_ma and price > short_ma and rsi > 60:
+        if short_ma > long_ma and rsi < 30:
             action = 'BUY'
         
         # SELL 
@@ -141,9 +142,12 @@ class Trader:
             
         return action
 
-    def get_stocks_to_buy(self,collection,min_price,max_price,num_stocks,date,short_days,long_days):
-        stocks = client.get_collection(collection)
+    def get_stocks_to_buy(self,collection,min_price,max_price,num_stocks,date):
+        stocks = client.get_collection(collection)[:15]
         to_buy = {}
+        temp = datetime.strptime(date,'%Y-%m-%d')
+        temp = temp - timedelta(10)
+        temp = datetime.strftime(temp,'%Y-%m-%d')
         
         for stock in stocks:
             try:
@@ -161,28 +165,29 @@ class Trader:
             if price < min_price or price > max_price:
                 continue
             
-            short_ma = simple_moving_average(data,short_days,date)
-            long_ma = simple_moving_average(data,long_days,date)
-            rsi = relative_strength_index(data)
+            short_ma = simple_moving_average(data,5,date)
+            long_ma = simple_moving_average(data,25,date)
+            rsi = relative_strength_index(data)     
+            trend = trend_direction(data,start,end)
             
-            action = self.signal(price,short_ma,long_ma,rsi)
+            data = self.generate_features(stock,temp,date)
+            print(stock,data)
             
-            if action == 'BUY':
-                to_buy[stock] = price
-            '''{'BILI': 47.02, 'TCEHY': 67.05, 'MSFT': 214.25, 'RUN': 49.22, 'CRM': 254.7, 'SE': 144.15, 'TSM': 78.5, 'PYPL': 191.84,
-            'UBER': 33.24, 'FB': 282.73, 'TWLO': 233.5, 'ABT': 104.16, 'MRVL': 37.36, 'CRWD': 125.19, 'LVGO': 126.49, 'ROKU': 159.91, 
-            'QCOM': 115.97, 'AAPL': 120.96, 'TDOC': 198.29, 'FSLY': 80.92, 'DOCU': 216.26, 'WORK': 29.07, 'SPOT': 248.21, 'PINS': 34.38, 
-            'AMD': 82.01, 'SQ': 146.39, 'INTC': 50.08, 'ORCL': 55.73, 'TWTR': 39.87, 'MMM': 165.77}'''
-        print(to_buy)
-
+            
+            
+        
+                
+                
 if __name__ == '__main__':
     trader = Trader()
     client = Robinhood()
     start = datetime(2020,8,3).strftime('%Y-%m-%d')
-    end = datetime(2020,8,3).strftime('%Y-%m-%d')
+    end = datetime(2020,8,4).strftime('%Y-%m-%d')
     data = yf.download('msft',period='2y')
     #data = data.loc[start:end,:]
     #print(data.iloc[0])
     #print(data)
     #t = trend_direction(data,start,end)
-    trader.get_stocks_to_buy('technology',25,300,5,end,5,25)
+    trader.get_stocks_to_buy('technology',25,300,5,end)
+    #start = datetime.strptime(start,'%Y-%m-%d')
+    #print(start - timedelta(5))

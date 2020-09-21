@@ -31,7 +31,7 @@ def trend_direction(data,start,end):
     
     if slope > 0:
         return 'UP'
-    if slope< 0:
+    if slope < 0:
         return 'DOWN'
     return 'NONE'
 
