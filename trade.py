@@ -8,6 +8,7 @@ import json
 from datetime import datetime,date,timedelta
 
 from utilities import *
+from robinhood import *
 #from db import *
 
 import matplotlib.pyplot as plt
@@ -16,6 +17,7 @@ import matplotlib.pyplot as plt
 db = Database(path)
 path = r"" 
 '''
+client = Robinhood()
 
 class Trader:        
         
@@ -30,7 +32,7 @@ class Trader:
     Returns
     - pandas dataframe containing feature values for each date in specified range
     '''
-    def generate_features(self,stock,start,end,short_ma,long_ma):
+    def generate_features(self,stock,start,end,short_ma=5,long_ma=25):
         # check that historical data for input stock can be found
         try:
             dates = yf.download(stock,start=start,end=end,period='2y').index
@@ -85,7 +87,7 @@ class Trader:
         trade_history = pd.DataFrame(columns=['DATE','TICKER','PRICE','RSI','ACTION','PROFIT'])
 
         # get date range for simulation
-        dates = self.generate_features(stocks[0],start,end,short_ma,long_ma).index
+        #dates = self.generate_features(stocks[0],start,end,short_ma,long_ma).index
 
         i = 0
         # generate feature data for each stock
@@ -95,7 +97,12 @@ class Trader:
             for date in data.index:
                 # generate the approporiate action for each date from the signal features
                 price = data.loc[date,'PRICE']
-                action = self.signal(data,date)
+                short_ma = data.loc[date,'SHORT-MA']
+                long_ma = data.loc[date,'LONG-MA']
+                rsi = data.loc[date,'RSI']
+                #signal_bb = data.loc[date,'BB-SIGNAL']
+                #trend = data.loc[date,'TREND']
+                action = self.signal(price,short_ma,long_ma,rsi)
                 profit = 0
 
                 # BUY
@@ -121,34 +128,61 @@ class Trader:
         #trade_history.to_csv('Backtesting/1/consumer-2019.csv',index=False)
         return trade_history,profit
 
-    def signal(self,data,date):
+    def signal(self,price,short_ma,long_ma,rsi):
         action = 'HOLD'
 
-        price = data.loc[date,'PRICE']
-        short_ma = data.loc[date,'SHORT-MA']
-        long_ma = data.loc[date,'LONG-MA']
-        rsi = data.loc[date,'RSI']
-        signal_bb = data.loc[date,'BB-SIGNAL']
-        trend = data.loc[date,'TREND']
-
         # BUY
-        if short_ma > long_ma and short_ma > price:
+        if short_ma > long_ma and price > short_ma and rsi > 60:
             action = 'BUY'
         
         # SELL 
         if rsi > 85:
             action = 'SELL'
-
+            
         return action
+
+    def get_stocks_to_buy(self,collection,min_price,max_price,num_stocks,date,short_days,long_days):
+        stocks = client.get_collection(collection)
+        to_buy = {}
+        
+        for stock in stocks:
+            try:
+                data = yf.download(stock,period='2y')
+            except:
+                continue
+            
+            data = data.loc[:date,:].round(2)
+            
+            if data.empty:
+                continue
+            
+            price = data['Adj Close'].iloc[-1]
+            
+            if price < min_price or price > max_price:
+                continue
+            
+            short_ma = simple_moving_average(data,short_days,date)
+            long_ma = simple_moving_average(data,long_days,date)
+            rsi = relative_strength_index(data)
+            
+            action = self.signal(price,short_ma,long_ma,rsi)
+            
+            if action == 'BUY':
+                to_buy[stock] = price
+            '''{'BILI': 47.02, 'TCEHY': 67.05, 'MSFT': 214.25, 'RUN': 49.22, 'CRM': 254.7, 'SE': 144.15, 'TSM': 78.5, 'PYPL': 191.84,
+            'UBER': 33.24, 'FB': 282.73, 'TWLO': 233.5, 'ABT': 104.16, 'MRVL': 37.36, 'CRWD': 125.19, 'LVGO': 126.49, 'ROKU': 159.91, 
+            'QCOM': 115.97, 'AAPL': 120.96, 'TDOC': 198.29, 'FSLY': 80.92, 'DOCU': 216.26, 'WORK': 29.07, 'SPOT': 248.21, 'PINS': 34.38, 
+            'AMD': 82.01, 'SQ': 146.39, 'INTC': 50.08, 'ORCL': 55.73, 'TWTR': 39.87, 'MMM': 165.77}'''
+        print(to_buy)
 
 if __name__ == '__main__':
     trader = Trader()
-    
-    start = datetime(2019,1,1).strftime('%Y-%m-%d')
-    end = datetime(2019,2,1).strftime('%Y-%m-%d')
+    client = Robinhood()
+    start = datetime(2020,8,3).strftime('%Y-%m-%d')
+    end = datetime(2020,8,3).strftime('%Y-%m-%d')
     data = yf.download('msft',period='2y')
     #data = data.loc[start:end,:]
     #print(data.iloc[0])
     #print(data)
-    t = trend_direction(data,start,end)
-    
+    #t = trend_direction(data,start,end)
+    trader.get_stocks_to_buy('technology',25,300,5,end,5,25)
