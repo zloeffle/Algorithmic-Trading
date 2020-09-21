@@ -62,7 +62,7 @@ class Trader:
             bb_signal = bollinger_bands_signal(bb)
 
             # overall trend from the start date until the current date
-            trend = trend_direction(data,start,d)
+            trend = trend_direction(data,d)
             
             # insert row into result dataframe
             results.loc[d,:] = [price,short_sma,long_sma,int(bb_signal),rsi,trend]
@@ -126,14 +126,13 @@ class Trader:
         profit = round(trade_history['PROFIT'].sum(),2)
         trade_history['DATE'] = pd.to_datetime(trade_history['DATE'])
         trade_history = trade_history.sort_values('DATE')
-        #trade_history.to_csv('Backtesting/1/consumer-2019.csv',index=False)
         return trade_history,profit
 
     def signal(self,price,short_ma,long_ma,rsi,bb_signal,trend):
         action = 'HOLD'
 
         # BUY
-        if short_ma > long_ma and rsi < 30:
+        if short_ma > long_ma:
             action = 'BUY'
         
         # SELL 
@@ -143,7 +142,7 @@ class Trader:
         return action
 
     def get_stocks_to_buy(self,collection,min_price,max_price,num_stocks,date):
-        stocks = client.get_collection(collection)[:15]
+        stocks = client.get_collection(collection)
         to_buy = {}
         temp = datetime.strptime(date,'%Y-%m-%d')
         temp = temp - timedelta(10)
@@ -168,11 +167,12 @@ class Trader:
             short_ma = simple_moving_average(data,5,date)
             long_ma = simple_moving_average(data,25,date)
             rsi = relative_strength_index(data)     
-            trend = trend_direction(data,start,end)
+            bb = bollinger_bands(data.loc[:date,:])
+            bb_signal = bollinger_bands_signal(bb)
+            trend = trend_direction(data,date)
             
-            data = self.generate_features(stock,temp,date)
-            print(stock,data)
-            
+            print(trend)
+            break
             
             
         

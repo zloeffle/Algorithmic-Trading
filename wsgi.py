@@ -57,6 +57,14 @@ def simulate():
             return render_template('results_simulate.html',data=data,profit=profit)
     return render_template('simulate.html')
 
+    @app.route('/buy_stocks/',methods=['GET','POST'])
+    def buy_stocks():
+        if request.method == 'POST':
+            return render_template('buy_stocks.html')
+        return render_template('buy_stocks.html')
+        
+    
+
 if __name__ == '__main__':
     app.run(debug=True)
     

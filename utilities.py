@@ -17,18 +17,17 @@ def resistance_level(data,start,end):
     date = df.idxmax()
     return price,date
 
-def trend_direction(data,start,end):
+def trend_direction(data,date):
     df = data.copy()
     df = df[['Adj Close','High','Low']].round(2)
     df['date_id'] = ((df.index.date - df.index.date.min())).astype('timedelta64[D]')
     df['date_id'] = df['date_id'].dt.days + 1
     
-    df = df.loc[start:end,:]
-    start = (df['date_id'].iloc[0],df['Adj Close'].iloc[0])
-    end = (df.loc[end,'date_id'],df.loc[end,'Adj Close'])
+    df = df.loc[:date,:]
+    start = (df['date_id'].iloc[-5],df['Adj Close'].iloc[-5])
+    end = (df['date_id'].iloc[-1],df['Adj Close'].iloc[-1])
     
     slope = round((end[1] - start[1]) / (end[0]-start[0]),2)
-    
     if slope > 0:
         return 'UP'
     if slope < 0:
