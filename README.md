@@ -5,10 +5,11 @@
 ### Future Features
 
 ### Structure
-- trade.py: 
-- utilities.py - 
-- robinhood.py
-- wsgi.py
+- trade.py:
+- utilities.py:  
+- robinhood.py: 
+- wsgi.py: 
+- templates: 
 
 ### Dependencies
 
