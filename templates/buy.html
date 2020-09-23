@@ -1,0 +1,72 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="container">   
+  <form action="" method="POST">
+    <div class="row">
+      <div class="col">
+        <label for="Collection">Collection</label>
+        <select name="Collection" id="Collection">
+          <option value="technology">Technology</option>
+          <option value="finance">Finance</option>
+          <option value="healthcare">Healthcare</option>
+          <option value="pharmaceutical">Pharmaceutical</option>
+          <option value="entertainment">Entertainment</option>
+          <option value="real-estate">Real Estate</option>
+          <option value="energy">Energy</option>
+          <option value="automotive">Automotive</option>
+          <option value="agriculture">Agriculture</option>
+          <option value="100-most-popular">100 Most Popular</option>
+        </select>
+        
+        <label for="min_price">Min Price</label>
+        <input type="number" name="min_price" value="{{request.form['min_price']}}">
+        <label for="max_price">Max Price</label>
+        <input type="number" name="max_price" value="{{request.form['max_price']}}">
+        <label for="date">Date</label>
+        <input type="text" name="date" placeholder="YYYY-MM-DD" value="{{request.form['date']}}">
+        <label for="short_ma">Short Moving Average</label>
+        <input type="number" name="short_ma" placeholder="Days" value="{{ request.form['short_ma'] }}">
+        <label for="long_ma">Long Moving Average</label>
+        <input type="number" name="long_ma" placeholder="Days" value="{{ request.form['long_ma'] }}">
+        
+        <br>
+        
+        <b>Indicators:</b>
+        <label for="ma_cross" style="padding-left: 10px;">Moving Average Cross</label>
+        <input type="checkbox" name="ma_cross">
+        <label for="bb" style="padding-left: 10px;">Bollinger Bands</label>
+        <input type="checkbox" name="bb">
+        <label for="rsi" style="padding-left: 10px;">Relative Strength Index</label>
+        <input type="checkbox" name="rsi">
+
+        <br>
+
+        <input type="submit" value="Submit">
+
+      </div>
+    </div>
+
+  </form>
+    <div class="row" style="padding-top: 30px;">
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <td>TICKER</td>
+              <td>PRICE</td>
+              <td>SHORT-MA</td>
+              <td>LONG-MA</td>
+              <td>BB-UPPER</td>
+              <td>BB-LOWER</td>
+              <td>BB-WIDTH</td>
+              <td>RSI</td>
+            </tr>
+          </thead>
+            {% block body %}
+            {% endblock %}
+        </table>
+      </div>
+    </div>
+</div>
+{% endblock %}

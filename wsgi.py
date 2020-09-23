@@ -10,7 +10,6 @@ import pandas as pd
 '''
 Web Server Gateway Interface
 '''
-
 app = Flask(__name__) 
 trader = Trader()
 
@@ -35,35 +34,19 @@ def index():
             return render_template('results_analyze.html',data=data,stock=ticker)
     return render_template('index.html')
 
-@app.route('/simulate/',methods=['GET','POST'])
-def simulate():
+@app.route('/buy/',methods=['GET','POST'])
+def buy():
     if request.method == 'POST':
-        # get form data
-        tickers = request.form.get('Tickers').split(',')
-        start = request.form.get('StartDate')
-        end = request.form.get('EndDate')
-        short_ma = int(request.form.get('ShortMA'))
-        long_ma = int(request.form.get('LongMA'))
-        box = request.form.get('Checkbox')
-        
-        if start and end:
-            start = datetime.strptime(start,'%Y-%m-%d').strftime('%Y-%m-%d')
-            end = datetime.strptime(end,'%Y-%m-%d').strftime('%Y-%m-%d')
-            data,profit = trader.simulate(tickers,start,end,short_ma,long_ma)
+        col = request.form.get('Collection')
+        min_price = float(request.form.get('min_price'))
+        max_price = float(request.form.get('max_price'))
+        date = request.form.get('date')
+        print(col,min_price,max_price,date)
 
-            if box:
-                data = data[data['ACTION'] != 'HOLD']
-
-            return render_template('results_simulate.html',data=data,profit=profit)
-    return render_template('simulate.html')
-
-    @app.route('/buy_stocks/',methods=['GET','POST'])
-    def buy_stocks():
-        if request.method == 'POST':
-            return render_template('buy_stocks.html')
-        return render_template('buy_stocks.html')
-        
-    
+        if col and min_price and max_price and date:
+            data = trader.get_stocks_to_buy(col,min_price,max_price,date)
+            return render_template('results_buy.html',data=data)
+    return render_template('buy.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -3,20 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 ################# DESCRIPTORS #################
-def support_level(data,start,end):
-    df = data.copy()
-    df = df['Adj Close'].round(2)
-    price = df.min()
-    date = df.idxmin()
-    return price,date
-
-def resistance_level(data,start,end):
-    df = data.copy()
-    df = df['Adj Close'].round(2)
-    price = df.max()
-    date = df.idxmax()
-    return price,date
-
+'''
+Computes which direction a stock is currently trending 
+'''
 def trend_direction(data,date):
     df = data.copy()
     df = df[['Adj Close','High','Low']].round(2)
@@ -30,23 +19,19 @@ def trend_direction(data,date):
     slope = round((end[1] - start[1]) / (end[0]-start[0]),2)
     if slope > 0:
         return 'UP'
-    if slope < 0:
+    if slope <= 0:
         return 'DOWN'
-    return 'NONE'
+
 
 ################# INDICATORS #################
-
+'''
+Calaculates simple moving average over the specified
+'''
 def simple_moving_average(data,days,end_date):
     days = int(days)
     df = data.copy()
     df = df.loc[:end_date,:]
     avg = df['Adj Close'].rolling(days).mean()
-    return round(avg.iloc[-1],2)
-
-def exponential_moving_average(data,days,end_date):
-    df = data.copy()
-    df = df.loc[:end_date,:]
-    avg = df['Adj Close'].ewm(days).mean()
     return round(avg.iloc[-1],2)
 
 '''
@@ -72,18 +57,9 @@ def relative_strength_index(data,period=14):
     rsi = rsi.reset_index()
     data = data.reset_index()
     data['RSI'] = rsi['Adj Close']
-    #print(data)
     
     rsi = data['RSI'].iloc[-1]
     return round(rsi,2)
-
-def rsi_signal(rsi,lower_thresh=30,upper_thresh=70):
-    if rsi <= lower_thresh:
-        return 1
-    elif rsi >= upper_thresh:
-        return -1
-    else:
-        return 0
 
 '''
 Bollinger Bands
@@ -102,17 +78,3 @@ def bollinger_bands(data,n=20):
     df = df.round(2)
     df = df[['Adj Close','UPPER','LOWER','WIDTH']]
     return df
-
-def bollinger_bands_signal(data):
-    df = data.copy()
-    if not df.empty:
-        df['DIFF UPPER'] = df['Adj Close'] - df['UPPER']
-        df['DIFF LOWER'] = df['Adj Close'] - df['LOWER']
-        df = df.abs()
-
-        df['TEMP'] = df['DIFF UPPER'] > df['DIFF LOWER']
-        df.loc[df['TEMP'] == True,'SIGNAL'] = 1
-        df.loc[df['TEMP'] == False,'SIGNAL'] = -1
-        df.drop('TEMP',axis=1,inplace=True)
-        return df['SIGNAL'].iloc[-1]
-    return 0
