@@ -66,7 +66,7 @@ class Trader:
             bb_width = bb.loc[d,'WIDTH'] # width between upper and lower
 
             # overall trend from the start date until the current date
-            trend = trend_direction(data,d)
+            trend = trend_direction(data.loc[:d,:])
             
             # insert row into result dataframe
             results.loc[d,:] = [price,short_sma,long_sma,bb_upper,bb_lower,bb_width,rsi,trend]
@@ -91,8 +91,10 @@ class Trader:
 if __name__ == '__main__':
     trader = Trader()
     client = Robinhood()
-    start = datetime(2020,8,3).strftime('%Y-%m-%d')
-    end = datetime(2020,9,20).strftime('%Y-%m-%d')
+    start = datetime(2020,8,1).strftime('%Y-%m-%d')
+    end = datetime(2020,9,4).strftime('%Y-%m-%d')
     
-    data = trader.generate_features('roku',start,end)
-    print(data)
+    data = yf.download('msft',period='2y')
+    data = data.loc[:end,:]
+    t = trend_direction(data)
+    print(t)

@@ -1,27 +1,9 @@
+from operator import truediv
+from matplotlib.pyplot import plot
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-
-################# DESCRIPTORS #################
-'''
-Computes which direction a stock is currently trending 
-'''
-def trend_direction(data,date):
-    df = data.copy()
-    df = df[['Adj Close','High','Low']].round(2)
-    df['date_id'] = ((df.index.date - df.index.date.min())).astype('timedelta64[D]')
-    df['date_id'] = df['date_id'].dt.days + 1
-    
-    df = df.loc[:date,:]
-    start = (df['date_id'].iloc[-5],df['Adj Close'].iloc[-5])
-    end = (df['date_id'].iloc[-1],df['Adj Close'].iloc[-1])
-    
-    slope = round((end[1] - start[1]) / (end[0]-start[0]),2)
-    if slope > 0:
-        return 'UP'
-    if slope <= 0:
-        return 'DOWN'
-
+from scipy import signal
 
 ################# INDICATORS #################
 '''
@@ -33,6 +15,83 @@ def simple_moving_average(data,days,end_date):
     df = df.loc[:end_date,:]
     avg = df['Adj Close'].rolling(days).mean()
     return round(avg.iloc[-1],2)
+
+'''
+Calculates slope between two data points
+'''
+def slope(y2,y1,x2,x1):
+    return round((y2-y1)/(x2-x1),2)
+
+'''
+Computes which direction a stock is currently trending over a specified period
+'''
+def peaks_and_valleys(data,period=31,plot=False):
+    df = data.copy()
+    df = df[['Adj Close','High','Low']].round(2)
+    df = df.iloc[-period:]
+    df['date_id'] = range(1,len(df)+1)
+   
+    x = np.array(df['date_id'])
+    y = np.array(df['Adj Close'])
+    # plot data
+    if plot:
+        plt.plot(x,y)
+        plt.xticks(np.arange(min(x),max(x)+1,1.0))
+        plt.show()
+        
+    # set index as integer scale
+    df.index = df['date_id']
+    
+    # Get peaks and valleys to compute trend direction
+    peaks = []
+    valleys = []
+    for i in range(2,len(df),1):
+        curr = df.loc[i,'Adj Close']
+        lower = df.loc[i-1,'Adj Close']
+        upper = df.loc[i+1,'Adj Close']
+        
+        # peaks
+        if curr > lower and curr > upper:
+            peaks.append(i)
+        
+        # valleys
+        if curr < lower and curr < upper:
+            valleys.append(i)
+    
+    peaks = df[df.index.isin(peaks)]
+    valleys = df[df.index.isin(valleys)]
+    valleys = valleys[valleys.index > peaks.index[0]]
+    
+    return peaks,valleys
+
+def trend_direction(data):
+    peaks,valleys = peaks_and_valleys(data)
+    
+    # Calculate slope for peaks and valleys
+    peaks_slope = slope(peaks['Adj Close'].iloc[-1],peaks['Adj Close'].iloc[0],peaks.index[-1],peaks.index[0])
+    valleys_slope = slope(valleys['Adj Close'].iloc[-1],valleys['Adj Close'].iloc[0],valleys.index[-1],valleys.index[0])
+    
+    # upward trend
+    drop = 0
+    prev = peaks.index[0]
+    for i in range(1,len(peaks),1):
+        curr = peaks.index[i]
+        
+        if peaks.loc[curr,'Adj Close'] < peaks.loc[prev,'Adj Close']:
+            drop = i
+        prev = curr  
+    peaks = peaks.iloc[drop:]
+    
+    prev = valleys.index[0]
+    for i in range(1,len(valleys),1):
+        curr = valleys.index[i]
+        
+        if valleys.loc[curr,'Adj Close'] < valleys.loc[prev,'Adj Close']:
+            drop = i
+        prev = curr  
+    valleys = valleys.iloc[drop:]
+    
+    # downward trend
 
 '''
 Relative Strength Index (RSI): Momentum oscillator that measures velocity and magnitude of directional price movements
