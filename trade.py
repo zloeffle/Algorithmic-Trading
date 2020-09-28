@@ -92,9 +92,9 @@ if __name__ == '__main__':
     trader = Trader()
     client = Robinhood()
     start = datetime(2020,8,1).strftime('%Y-%m-%d')
-    end = datetime(2020,9,4).strftime('%Y-%m-%d')
+    end = datetime(2020,9,1).strftime('%Y-%m-%d')
     
-    data = yf.download('msft',period='2y')
+    data = yf.download('aapl',period='2y')
     data = data.loc[:end,:]
     t = trend_direction(data)
     print(t)

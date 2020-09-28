@@ -23,28 +23,22 @@ def slope(y2,y1,x2,x1):
     return round((y2-y1)/(x2-x1),2)
 
 '''
-Computes which direction a stock is currently trending over a specified period
+Finds the peaks and valleys for a stock's historical price data over a specified period
 '''
-def peaks_and_valleys(data,period=31,plot=False):
+def peaks_and_valleys(data,period):
     df = data.copy()
     df = df[['Adj Close','High','Low']].round(2)
     df = df.iloc[-period:]
     df['date_id'] = range(1,len(df)+1)
-   
-    x = np.array(df['date_id'])
-    y = np.array(df['Adj Close'])
-    # plot data
-    if plot:
-        plt.plot(x,y)
-        plt.xticks(np.arange(min(x),max(x)+1,1.0))
-        plt.show()
-        
+    print(df)
+    
     # set index as integer scale
     df.index = df['date_id']
     
     # Get peaks and valleys to compute trend direction
     peaks = []
     valleys = []
+    thresh = 1
     for i in range(2,len(df),1):
         curr = df.loc[i,'Adj Close']
         lower = df.loc[i-1,'Adj Close']
@@ -64,34 +58,79 @@ def peaks_and_valleys(data,period=31,plot=False):
     
     return peaks,valleys
 
-def trend_direction(data):
-    peaks,valleys = peaks_and_valleys(data)
+'''
+Computes upward and downward trend lines as well as their slopes
+'''
+def trend_direction(data,periods=21,plot=False):
+    peaks,valleys = peaks_and_valleys(data,periods)
+    peaks = peaks.sort_values('Adj Close')
+    valleys = valleys.sort_values('Adj Close')
+
+    '''
+    Lowest Peak and Highest peak
+    Lowest valley and Highest valley
+    *** LOWEST MUST COME AFTER HIGHEST OR HIGHEST MUST COME AFTER LOWEST
+    '''
+    highs = [peaks.index[0],peaks.index[-1]]
+    lows = [valleys.index[0],valleys.index[-1]]
+    highs.sort()
+    lows.sort()
+
+    # Slope for peaks and valleys
+    peaks_slope = slope(peaks.loc[highs[-1],'Adj Close'],peaks.loc[highs[0],'Adj Close'],highs[-1],highs[0])
+    valleys_slope = slope(valleys.loc[lows[-1],'Adj Close'],valleys.loc[lows[0],'Adj Close'],lows[-1],lows[0])
+
+    # y intercepts for peaks and valleys
+    valleys_y_int = valleys.loc[lows[-1],'Adj Close'] - valleys_slope*lows[-1]
+    peaks_y_int = peaks.loc[highs[-1],'Adj Close'] - peaks_slope*highs[-1]
+
+    # generate upward and downward trendlines
+    valleys_trend_line,peaks_trend_line = [],[]
+    x = range(1,periods+1)
+    y = np.array(data['Adj Close'].iloc[-periods:].round(2))
+    for val in x:
+        down = round(peaks_slope*val + peaks_y_int,2)
+        up = round(valleys_slope*val + valleys_y_int,2)
+        valleys_trend_line.append(up)
+        peaks_trend_line.append(down)
+
+    if plot:
+        plt.plot(x,y,color='b')
+        plt.xticks(np.arange(min(x),max(x)+1,1.0))
+
+        plt.plot(x,valleys_trend_line,color='r')
+        plt.plot(x,peaks_trend_line,color='g')
+
+        plt.grid()
+        plt.show()
+
+    price = data['Adj Close'].iloc[-1]
+    ma = data['Adj Close'].rolling(5).mean().round(2)
+    ma = ma.iloc[-5:]
     
-    # Calculate slope for peaks and valleys
-    peaks_slope = slope(peaks['Adj Close'].iloc[-1],peaks['Adj Close'].iloc[0],peaks.index[-1],peaks.index[0])
-    valleys_slope = slope(valleys['Adj Close'].iloc[-1],valleys['Adj Close'].iloc[0],valleys.index[-1],valleys.index[0])
-    
-    # upward trend
-    drop = 0
-    prev = peaks.index[0]
-    for i in range(1,len(peaks),1):
-        curr = peaks.index[i]
-        
-        if peaks.loc[curr,'Adj Close'] < peaks.loc[prev,'Adj Close']:
-            drop = i
-        prev = curr  
-    peaks = peaks.iloc[drop:]
-    
-    prev = valleys.index[0]
-    for i in range(1,len(valleys),1):
-        curr = valleys.index[i]
-        
-        if valleys.loc[curr,'Adj Close'] < valleys.loc[prev,'Adj Close']:
-            drop = i
-        prev = curr  
-    valleys = valleys.iloc[drop:]
-    
-    # downward trend
+    # UPTREND 
+    if valleys_slope > 0:
+        if price > max(valleys_trend_line):
+            if ma.iloc[-1] > ma.iloc[0] and price >= ma.iloc[-1]:
+                return 'UP'
+            else:
+                return 'UP REVERSING'
+        else:
+            return 'UP REVERSING'
+
+    # DOWNTREND
+    elif peaks_slope < 0:
+        if price < min(peaks_trend_line):
+            if ma.iloc[-1] < ma.iloc[0] and price <= ma.iloc[-1]:
+                return 'DOWN'
+            else:
+                return 'DOWN REVERSING'
+        else:
+            return 'DOWN REVERSING'
+    # FLAT TREND
+    else:
+        return 'FLAT'
+
 
 '''
 Relative Strength Index (RSI): Momentum oscillator that measures velocity and magnitude of directional price movements
