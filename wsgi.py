@@ -13,6 +13,9 @@ Web Server Gateway Interface
 app = Flask(__name__) 
 trader = Trader()
 
+'''
+Page for Analyze
+'''
 @app.route('/',methods=['GET','POST'])
 def index():
     if request.method == 'POST':
@@ -34,6 +37,10 @@ def index():
             return render_template('results_analyze.html',data=data,stock=ticker)
     return render_template('index.html')
 
+
+'''
+Page for Get Stocks To Buy
+'''
 @app.route('/buy/',methods=['GET','POST'])
 def buy():
     if request.method == 'POST':
