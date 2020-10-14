@@ -83,6 +83,10 @@ class Robinhood:
                 temp = item.findAll('span')
                 i += 1   
             tickers.append(temp[0].text)
+        
+        for t in tickers:
+            if '.' in t:
+                tickers.remove(t)
         return tickers
         
 if __name__ == '__main__':

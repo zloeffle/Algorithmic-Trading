@@ -46,7 +46,7 @@ class Trader:
 
         # download historical data and create the resultant dataframe
         data = yf.download(stock,end=end,period='2y').round(2)
-        results = pd.DataFrame(columns=['PRICE','SHORT-MA','LONG-MA','BB-UPPER','BB-LOWER','BB-WIDTH','RSI','TREND'],index=dates)
+        results = pd.DataFrame(columns=['PRICE','SHORT-MA','LONG-MA','BB-UPPER','BB-LOWER','BB-WIDTH','RSI','PEAKS-SLOPE','VALLEYS-SLOPE'],index=dates)
         
         # get price and signal features for each date
         for d in dates:
@@ -66,10 +66,10 @@ class Trader:
             bb_width = bb.loc[d,'WIDTH'] # width between upper and lower
 
             # overall trend from the start date until the current date
-            trend = trend_direction(data.loc[:d,:])
+            peaks_slope,valleys_slope = trend_direction(data.loc[:d,:])
             
             # insert row into result dataframe
-            results.loc[d,:] = [price,short_sma,long_sma,bb_upper,bb_lower,bb_width,rsi,trend]
+            results.loc[d,:] = [price,short_sma,long_sma,bb_upper,bb_lower,bb_width,rsi,peaks_slope,valleys_slope]
 
         results['DATE'] = results.index
         return results
@@ -78,23 +78,22 @@ class Trader:
     '''
     Generates buy/sell signals based on moving average, bollinger bands, relative strength index
     '''
-    def signal(self,data,date):
-        action = 'HOLD'
-        short_ma = data.loc[date,'SHORT-MA']
-        long_ma = data.loc[date,'LONG-MA']
-        rsi = data.loc[date,'RSI']
-        bb_upper = data.loc[date,'BB-UPPER']
-        bb_lower = data.loc[date,'BB-LOWER']
-        bb_width = data.loc[date,'BB-WIDTH']
-        trend = data.loc[date,'TREND']
+    def signal(self,data):        
+        data['ACTION'] = 'HOLD'
+        data = data.reset_index(drop=True)
+        low = data['PRICE'].min()
+        low_index = data[data['PRICE'] == low].index.values[0]
+        high = data.loc[low_index:,'PRICE'].max()
+        high_index = data[data['PRICE'] == high].index.values[0]
         
+        data.loc[low_index,'ACTION'] = 'BUY'
+        data.loc[high_index,'ACTION'] = 'SELL'
+        return data
+    
 if __name__ == '__main__':
     trader = Trader()
     client = Robinhood()
     start = datetime(2020,8,1).strftime('%Y-%m-%d')
     end = datetime(2020,9,1).strftime('%Y-%m-%d')
-    
-    data = yf.download('aapl',period='2y')
-    data = data.loc[:end,:]
-    t = trend_direction(data)
-    print(t)
+    data = trader.generate_features('msft',start,end)
+    print(data)

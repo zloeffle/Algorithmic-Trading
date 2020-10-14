@@ -30,7 +30,7 @@ def peaks_and_valleys(data,period):
     df = df[['Adj Close','High','Low']].round(2)
     df = df.iloc[-period:]
     df['date_id'] = range(1,len(df)+1)
-    print(df)
+    #print(df)
     
     # set index as integer scale
     df.index = df['date_id']
@@ -108,6 +108,8 @@ def trend_direction(data,periods=21,plot=False):
     ma = data['Adj Close'].rolling(5).mean().round(2)
     ma = ma.iloc[-5:]
     
+    return peaks_slope,valleys_slope
+    '''
     # UPTREND 
     if valleys_slope > 0:
         if price > max(valleys_trend_line):
@@ -129,7 +131,8 @@ def trend_direction(data,periods=21,plot=False):
             return 'DOWN REVERSING'
     # FLAT TREND
     else:
-        return 'FLAT'
+        return 'FLAT
+    '''
 
 
 '''
