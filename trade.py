@@ -2,6 +2,7 @@ import os
 from time import time
 import pandas as pd
 import numpy as np
+#from pandas.core.series import num
 import yfinance as yf
 import math
 import random
@@ -66,7 +67,11 @@ class Trader:
             bb_width = bb.loc[d,'WIDTH'] # width between upper and lower
 
             # overall trend from the start date until the current date
-            peaks_slope,valleys_slope = trend_direction(data.loc[:d,:])
+            peaks,valleys = peaks_and_valleys(data.loc[:d,:],21)
+            peaks.append(price)
+            valleys.append(price)
+            peaks_slope = best_fit(range(1,len(peaks)+1),peaks)
+            valleys_slope = best_fit(range(1,len(peaks)+1),valleys)
             
             # insert row into result dataframe
             results.loc[d,:] = [price,short_sma,long_sma,bb_upper,bb_lower,bb_width,rsi,peaks_slope,valleys_slope]
@@ -89,7 +94,8 @@ class Trader:
         data.loc[low_index,'ACTION'] = 'BUY'
         data.loc[high_index,'ACTION'] = 'SELL'
         return data
-    
+        
+        
 if __name__ == '__main__':
     trader = Trader()
     client = Robinhood()
@@ -97,3 +103,4 @@ if __name__ == '__main__':
     end = datetime(2020,9,1).strftime('%Y-%m-%d')
     data = trader.generate_features('msft',start,end)
     print(data)
+    

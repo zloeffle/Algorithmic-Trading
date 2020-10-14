@@ -17,28 +17,21 @@ def simple_moving_average(data,days,end_date):
     return round(avg.iloc[-1],2)
 
 '''
-Calculates slope between two data points
-'''
-def slope(y2,y1,x2,x1):
-    return round((y2-y1)/(x2-x1),2)
-
-'''
 Finds the peaks and valleys for a stock's historical price data over a specified period
 '''
-def peaks_and_valleys(data,period):
+def peaks_and_valleys(data,period=31):
     df = data.copy()
     df = df[['Adj Close','High','Low']].round(2)
     df = df.iloc[-period:]
     df['date_id'] = range(1,len(df)+1)
-    #print(df)
     
     # set index as integer scale
+    df['DATE'] = df.index
     df.index = df['date_id']
     
     # Get peaks and valleys to compute trend direction
     peaks = []
     valleys = []
-    thresh = 1
     for i in range(2,len(df),1):
         curr = df.loc[i,'Adj Close']
         lower = df.loc[i-1,'Adj Close']
@@ -56,83 +49,24 @@ def peaks_and_valleys(data,period):
     valleys = df[df.index.isin(valleys)]
     valleys = valleys[valleys.index > peaks.index[0]]
     
-    return peaks,valleys
+    return list(peaks['Adj Close']),list(valleys['Adj Close'])
 
 '''
-Computes upward and downward trend lines as well as their slopes
+Calculates the slope and y intercept for the line of best fit that represents the given data points
 '''
-def trend_direction(data,periods=21,plot=False):
-    peaks,valleys = peaks_and_valleys(data,periods)
-    peaks = peaks.sort_values('Adj Close')
-    valleys = valleys.sort_values('Adj Close')
-
-    '''
-    Lowest Peak and Highest peak
-    Lowest valley and Highest valley
-    *** LOWEST MUST COME AFTER HIGHEST OR HIGHEST MUST COME AFTER LOWEST
-    '''
-    highs = [peaks.index[0],peaks.index[-1]]
-    lows = [valleys.index[0],valleys.index[-1]]
-    highs.sort()
-    lows.sort()
-
-    # Slope for peaks and valleys
-    peaks_slope = slope(peaks.loc[highs[-1],'Adj Close'],peaks.loc[highs[0],'Adj Close'],highs[-1],highs[0])
-    valleys_slope = slope(valleys.loc[lows[-1],'Adj Close'],valleys.loc[lows[0],'Adj Close'],lows[-1],lows[0])
-
-    # y intercepts for peaks and valleys
-    valleys_y_int = valleys.loc[lows[-1],'Adj Close'] - valleys_slope*lows[-1]
-    peaks_y_int = peaks.loc[highs[-1],'Adj Close'] - peaks_slope*highs[-1]
-
-    # generate upward and downward trendlines
-    valleys_trend_line,peaks_trend_line = [],[]
-    x = range(1,periods+1)
-    y = np.array(data['Adj Close'].iloc[-periods:].round(2))
-    for val in x:
-        down = round(peaks_slope*val + peaks_y_int,2)
-        up = round(valleys_slope*val + valleys_y_int,2)
-        valleys_trend_line.append(up)
-        peaks_trend_line.append(down)
-
-    if plot:
-        plt.plot(x,y,color='b')
-        plt.xticks(np.arange(min(x),max(x)+1,1.0))
-
-        plt.plot(x,valleys_trend_line,color='r')
-        plt.plot(x,peaks_trend_line,color='g')
-
-        plt.grid()
-        plt.show()
-
-    price = data['Adj Close'].iloc[-1]
-    ma = data['Adj Close'].rolling(5).mean().round(2)
-    ma = ma.iloc[-5:]
-    
-    return peaks_slope,valleys_slope
-    '''
-    # UPTREND 
-    if valleys_slope > 0:
-        if price > max(valleys_trend_line):
-            if ma.iloc[-1] > ma.iloc[0] and price >= ma.iloc[-1]:
-                return 'UP'
-            else:
-                return 'UP REVERSING'
-        else:
-            return 'UP REVERSING'
-
-    # DOWNTREND
-    elif peaks_slope < 0:
-        if price < min(peaks_trend_line):
-            if ma.iloc[-1] < ma.iloc[0] and price <= ma.iloc[-1]:
-                return 'DOWN'
-            else:
-                return 'DOWN REVERSING'
-        else:
-            return 'DOWN REVERSING'
-    # FLAT TREND
-    else:
-        return 'FLAT
-    '''
+def best_fit(x,y):
+        n = len(x)
+        x_bar = sum(x)/n
+        y_bar = sum(y)/n
+        
+        numer,denom = 0,0
+        for xi,yi in zip(x,y):
+            numer += (xi-x_bar)*(yi-y_bar)
+            denom += (xi-x_bar)**2
+        slope = round(numer/denom,2)
+        y_int = round(y_bar - slope*x_bar,2)
+        
+        return slope
 
 
 '''
