@@ -19,16 +19,16 @@ def simple_moving_average(data,days,end_date):
 '''
 Finds the peaks and valleys for a stock's historical price data over a specified period
 '''
-def peaks_and_valleys(data,period=31):
+def peaks_and_valleys(data,period=21):
     df = data.copy()
     df = df[['Adj Close','High','Low']].round(2)
-    df = df.iloc[-period:]
+    #df = df.iloc[-period:]
     df['date_id'] = range(1,len(df)+1)
-    
+
     # set index as integer scale
     df['DATE'] = df.index
     df.index = df['date_id']
-    
+    print(df)
     # Get peaks and valleys to compute trend direction
     peaks = []
     valleys = []
@@ -49,6 +49,7 @@ def peaks_and_valleys(data,period=31):
     valleys = df[df.index.isin(valleys)]
     valleys = valleys[valleys.index > peaks.index[0]]
     
+    print(peaks,valleys)
     return list(peaks['Adj Close']),list(valleys['Adj Close'])
 
 '''
@@ -59,15 +60,11 @@ def best_fit(x,y):
         x_bar = sum(x)/n
         y_bar = sum(y)/n
         
-        numer,denom = 0,0
-        for xi,yi in zip(x,y):
-            numer += (xi-x_bar)*(yi-y_bar)
-            denom += (xi-x_bar)**2
+        numer = n*sum([xi*yi for xi,yi in zip(x,y)]) - (sum(x)*sum(y))
+        denom = n*sum([xi**2 for xi in x]) - sum(x)**2
         slope = round(numer/denom,2)
-        y_int = round(y_bar - slope*x_bar,2)
-        
-        return slope
-
+        b = (sum(y) - slope*sum(x))/n
+        return slope,b
 
 '''
 Relative Strength Index (RSI): Momentum oscillator that measures velocity and magnitude of directional price movements

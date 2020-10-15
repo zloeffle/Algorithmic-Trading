@@ -67,11 +67,11 @@ class Trader:
             bb_width = bb.loc[d,'WIDTH'] # width between upper and lower
 
             # overall trend from the start date until the current date
-            peaks,valleys = peaks_and_valleys(data.loc[:d,:],21)
-            peaks.append(price)
-            valleys.append(price)
-            peaks_slope = best_fit(range(1,len(peaks)+1),peaks)
-            valleys_slope = best_fit(range(1,len(peaks)+1),valleys)
+            peaks,valleys = peaks_and_valleys(data.loc[:d,:])
+            #peaks.append(price)
+            #valleys.append(price)
+            peaks_slope = best_fit(range(1,len(peaks)+1),peaks)[0]
+            valleys_slope = best_fit(range(1,len(peaks)+1),valleys)[0]
             
             # insert row into result dataframe
             results.loc[d,:] = [price,short_sma,long_sma,bb_upper,bb_lower,bb_width,rsi,peaks_slope,valleys_slope]
@@ -100,7 +100,9 @@ if __name__ == '__main__':
     trader = Trader()
     client = Robinhood()
     start = datetime(2020,8,1).strftime('%Y-%m-%d')
-    end = datetime(2020,9,1).strftime('%Y-%m-%d')
-    data = trader.generate_features('msft',start,end)
-    print(data)
+    end = datetime(2020,9,3).strftime('%Y-%m-%d')
+    data = yf.download('msft',period='2y')
+    data = data.loc[:end,:]
     
+    peaks_and_valleys(data)
+    print(len(data))
