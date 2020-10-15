@@ -22,13 +22,13 @@ Finds the peaks and valleys for a stock's historical price data over a specified
 def peaks_and_valleys(data,period=21):
     df = data.copy()
     df = df[['Adj Close','High','Low']].round(2)
-    #df = df.iloc[-period:]
+    df = df.iloc[-period:]
     df['date_id'] = range(1,len(df)+1)
 
     # set index as integer scale
     df['DATE'] = df.index
     df.index = df['date_id']
-    print(df)
+
     # Get peaks and valleys to compute trend direction
     peaks = []
     valleys = []
@@ -49,7 +49,6 @@ def peaks_and_valleys(data,period=21):
     valleys = df[df.index.isin(valleys)]
     valleys = valleys[valleys.index > peaks.index[0]]
     
-    print(peaks,valleys)
     return list(peaks['Adj Close']),list(valleys['Adj Close'])
 
 '''

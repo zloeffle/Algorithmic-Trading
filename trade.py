@@ -71,7 +71,7 @@ class Trader:
             #peaks.append(price)
             #valleys.append(price)
             peaks_slope = best_fit(range(1,len(peaks)+1),peaks)[0]
-            valleys_slope = best_fit(range(1,len(peaks)+1),valleys)[0]
+            valleys_slope = best_fit(range(1,len(valleys)+1),valleys)[0]
             
             # insert row into result dataframe
             results.loc[d,:] = [price,short_sma,long_sma,bb_upper,bb_lower,bb_width,rsi,peaks_slope,valleys_slope]
@@ -104,5 +104,5 @@ if __name__ == '__main__':
     data = yf.download('msft',period='2y')
     data = data.loc[:end,:]
     
-    peaks_and_valleys(data)
-    print(len(data))
+    data = trader.generate_features('msft',start,end)
+    print(data)
