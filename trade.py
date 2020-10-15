@@ -68,8 +68,8 @@ class Trader:
 
             # overall trend from the start date until the current date
             peaks,valleys = peaks_and_valleys(data.loc[:d,:])
-            #peaks.append(price)
-            #valleys.append(price)
+            peaks.append(price)
+            valleys.append(price)
             peaks_slope = best_fit(range(1,len(peaks)+1),peaks)[0]
             valleys_slope = best_fit(range(1,len(valleys)+1),valleys)[0]
             
